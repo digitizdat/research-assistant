@@ -1,35 +1,21 @@
 <svg width="55" height="105" viewBox="0 0 55 105" xmlns="http://www.w3.org/2000/svg">
-  <!-- Head -->
-  <ellipse cx="27" cy="18" rx="8" ry="10" fill="#4a5568"/>
+  <!-- Mug body -->
+  <rect x="12" y="40" width="30" height="45" rx="4" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
   
-  <!-- Body -->
-  <rect x="20" y="25" width="14" height="25" rx="3" fill="#4a5568"/>
+  <!-- Coffee surface -->
+  <ellipse cx="27" cy="45" rx="13" ry="3" fill="#8b4513"/>
   
-  <!-- Left arm (thinking pose) -->
-  <rect x="12" y="30" width="12" height="4" rx="2" fill="#4a5568"/>
-  <rect x="10" y="28" width="4" height="8" rx="2" fill="#4a5568"/>
+  <!-- Handle -->
+  <ellipse cx="45" cy="62" rx="4" ry="12" fill="none" stroke="#e5e7eb" stroke-width="2"/>
   
-  <!-- Right arm -->
-  <rect x="31" y="32" width="10" height="4" rx="2" fill="#4a5568"/>
+  <!-- Steam -->
+  <path d="M 20 35 C 18 30, 22 25, 20 20 C 18 15, 22 10, 20 5" stroke="#d1d5db" stroke-width="1.5" fill="none"/>
+  <path d="M 27 37 C 25 32, 29 27, 27 22 C 25 17, 29 12, 27 7" stroke="#d1d5db" stroke-width="1.5" fill="none"/>
+  <path d="M 34 35 C 36 30, 32 25, 34 20 C 36 15, 32 10, 34 5" stroke="#d1d5db" stroke-width="1.5" fill="none"/>
   
-  <!-- Legs -->
-  <rect x="22" y="48" width="4" height="20" rx="2" fill="#4a5568"/>
-  <rect x="28" y="48" width="4" height="20" rx="2" fill="#4a5568"/>
+  <!-- Mug base -->
+  <rect x="14" y="80" width="26" height="4" rx="2" fill="#f3f4f6"/>
   
-  <!-- Base/seat -->
-  <rect x="15" y="68" width="24" height="8" rx="4" fill="#718096"/>
-  
-  <!-- Thinking elements -->
-  <circle cx="40" cy="15" r="2" fill="#e2e8f0" opacity="0.8"/>
-  <circle cx="45" cy="12" r="1.5" fill="#e2e8f0" opacity="0.6"/>
-  <circle cx="48" cy="8" r="1" fill="#e2e8f0" opacity="0.4"/>
-  
-  <!-- Research symbols -->
-  <rect x="5" y="85" width="8" height="1" fill="#4299e1"/>
-  <rect x="5" y="88" width="12" height="1" fill="#4299e1"/>
-  <rect x="5" y="91" width="6" height="1" fill="#4299e1"/>
-  
-  <rect x="35" y="85" width="10" height="1" fill="#4299e1"/>
-  <rect x="35" y="88" width="8" height="1" fill="#4299e1"/>
-  <rect x="35" y="91" width="12" height="1" fill="#4299e1"/>
+  <!-- Saucer -->
+  <ellipse cx="27" cy="95" rx="20" ry="4" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1"/>
 </svg>
