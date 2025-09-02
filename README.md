@@ -32,3 +32,8 @@ scientific papers
 ### Low Priority:
 * OAI-PMH harvesting - Extended coverage
 * Custom embedding generation - Redundant if ORKG Ask works
+
+## Other Ideas
+* Investigate https://opendoar.ac.uk/ and https://roar.eprints.org/ to
+  determine if these are things that can help augment information about the
+  availability of research papers.
