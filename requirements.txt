@@ -1,0 +1,4 @@
+requests>=2.28.0
+prompt-toolkit>=3.0.0
+strands>=0.1.0
+strands-tools>=0.1.0
