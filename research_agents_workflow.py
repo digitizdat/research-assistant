@@ -38,10 +38,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 
 from prompt_toolkit import prompt
-from prompt_toolkit.application.current import get_app
-from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.history import FileHistory
-from prompt_toolkit.key_binding import KeyBindings
 from strands import Agent
 from strands_tools import http_request
 

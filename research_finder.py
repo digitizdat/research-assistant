@@ -1,7 +1,7 @@
-from typing import Any
-from strands.types.tools import ToolUse, ToolResult
-import json
 from datetime import datetime
+from typing import Any
+
+from strands.types.tools import ToolResult, ToolUse
 
 TOOL_SPEC = {
     "name": "research_finder",
@@ -43,8 +43,9 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
     This tool queries OpenAlex and ORKG Ask APIs in parallel to provide structured research findings
     including publication details, abstracts, and relevance assessments. ORKG Ask provides semantic search on CORE data.
     """
-    import requests
     from concurrent.futures import ThreadPoolExecutor
+
+    import requests
     
     tool_use_id = tool_use["toolUseId"]
     topic = tool_use["input"]["topic"]
@@ -52,14 +53,6 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
     publication_types = tool_use["input"].get("publication_types", ["journal", "conference"])
     min_year = tool_use["input"].get("min_year", 2004)
     current_year = datetime.now().year
-
-    # Helper: Map publication_types to OpenAlex types
-    openalex_type_map = {
-        "journal": "journal-article",
-        "conference": "proceedings-article",
-        "preprint": "posted-content"
-    }
-    openalex_types = [openalex_type_map.get(pt, pt) for pt in publication_types]
 
     def query_openalex():
         """Query OpenAlex API"""
@@ -196,7 +189,7 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
 
     # Format the response
     response_text = f"🔬 **Research Finder Results for: '{topic}'**\n\n"
-    response_text += f"📊 **Search Parameters:**\n"
+    response_text += "📊 **Search Parameters:**\n"
     response_text += f"- Topic: {topic}\n"
     response_text += f"- Time Range: {min_year} - {current_year}\n"
     response_text += f"- Publication Types: {', '.join(publication_types)}\n"
