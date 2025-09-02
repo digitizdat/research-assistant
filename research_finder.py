@@ -12,29 +12,30 @@ TOOL_SPEC = {
             "properties": {
                 "topic": {
                     "type": "string",
-                    "description": "The research topic or keywords to search for"
+                    "description": "The research topic or keywords to search for",
                 },
                 "max_results": {
                     "type": "integer",
                     "description": "Maximum number of research papers to return (default: 10)",
-                    "default": 10
+                    "default": 10,
                 },
                 "publication_types": {
                     "type": "array",
                     "items": {"type": "string"},
                     "description": "Types of publications to include (e.g., 'journal', 'conference', 'preprint')",
-                    "default": ["journal", "conference"]
+                    "default": ["journal", "conference"],
                 },
                 "min_year": {
                     "type": "integer",
                     "description": "Minimum publication year (default: 20 years ago)",
-                    "default": 2004
-                }
+                    "default": 2004,
+                },
             },
-            "required": ["topic"]
+            "required": ["topic"],
         }
-    }
+    },
 }
+
 
 def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
     """
@@ -46,11 +47,13 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
     from concurrent.futures import ThreadPoolExecutor
 
     import requests
-    
+
     tool_use_id = tool_use["toolUseId"]
     topic = tool_use["input"]["topic"]
     max_results = tool_use["input"].get("max_results", 10)
-    publication_types = tool_use["input"].get("publication_types", ["journal", "conference"])
+    publication_types = tool_use["input"].get(
+        "publication_types", ["journal", "conference"]
+    )
     min_year = tool_use["input"].get("min_year", 2004)
     current_year = datetime.now().year
 
@@ -61,7 +64,7 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
             "search": topic,
             "filter": f"from_publication_date:{min_year}-01-01",
             "sort": "relevance_score:desc",
-            "per-page": max_results // 2 if max_results > 1 else 1
+            "per-page": max_results // 2 if max_results > 1 else 1,
         }
         try:
             r = requests.get(url, params=params, timeout=10)
@@ -70,17 +73,23 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
                 data = r.json()
                 results = data.get("results", [])
                 print(f"OpenAlex raw results count: {len(results)}")
-                return [{
-                    "title": item.get("title"),
-                    "authors": [a.get("author", {}).get("display_name", "") for a in item.get("authorships", [])],
-                    "year": item.get("publication_year"),
-                    "journal": item.get("host_venue", {}).get("display_name", ""),
-                    "doi": item.get("doi", ""),
-                    "abstract": item.get("abstract_inverted_index", {}),
-                    "relevance_score": item.get("relevance_score", 0.0),
-                    "citation_count": item.get("cited_by_count", 0),
-                    "publication_type": item.get("type", "")
-                } for item in results]
+                return [
+                    {
+                        "title": item.get("title"),
+                        "authors": [
+                            a.get("author", {}).get("display_name", "")
+                            for a in item.get("authorships", [])
+                        ],
+                        "year": item.get("publication_year"),
+                        "journal": item.get("host_venue", {}).get("display_name", ""),
+                        "doi": item.get("doi", ""),
+                        "abstract": item.get("abstract_inverted_index", {}),
+                        "relevance_score": item.get("relevance_score", 0.0),
+                        "citation_count": item.get("cited_by_count", 0),
+                        "publication_type": item.get("type", ""),
+                    }
+                    for item in results
+                ]
             else:
                 print(f"OpenAlex error: {r.text[:200]}")
         except Exception as e:
@@ -90,10 +99,7 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
     def query_orkg_ask():
         """Query ORKG Ask API for semantic search"""
         url = "https://api.ask.orkg.org/index/search"
-        params = {
-            "query": topic,
-            "size": max_results // 2 if max_results > 1 else 1
-        }
+        params = {"query": topic, "size": max_results // 2 if max_results > 1 else 1}
         print(f"🔍 ORKG Ask URL: {url}")
         print(f"📦 ORKG Ask params: {params}")
         try:
@@ -106,23 +112,27 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
                 data = r.json()
                 items = data.get("payload", {}).get("items", [])
                 print(f"ORKG Ask raw results count: {len(items)}")
-                return [{
-                    "title": item.get("title", ""),
-                    "authors": item.get("authors", []),
-                    "year": item.get("year", ""),
-                    "journal": item.get("venue", ""),
-                    "doi": item.get("doi", ""),
-                    "abstract": item.get("abstract", ""),
-                    "relevance_score": item.get("score", 0.9),
-                    "citation_count": item.get("citation_count", 0),
-                    "publication_type": "journal",
-                    "source": "ORKG"
-                } for item in items if not item.get("year") or int(item.get("year", 0)) >= min_year]
+                return [
+                    {
+                        "title": item.get("title", ""),
+                        "authors": item.get("authors", []),
+                        "year": item.get("year", ""),
+                        "journal": item.get("venue", ""),
+                        "doi": item.get("doi", ""),
+                        "abstract": item.get("abstract", ""),
+                        "relevance_score": item.get("score", 0.9),
+                        "citation_count": item.get("citation_count", 0),
+                        "publication_type": "journal",
+                        "source": "ORKG",
+                    }
+                    for item in items
+                    if not item.get("year") or int(item.get("year", 0)) >= min_year
+                ]
             else:
                 print(f"❌ ORKG Ask error response: {r.text[:200]}")
         except Exception as e:
             print(f"⚠️ ORKG Ask exception: {e}")
-            if 'r' in locals():
+            if "r" in locals():
                 print(f"📄 Raw response: {r.text[:100]}...")
         return []
         return []
@@ -130,11 +140,11 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
     # Execute API calls in parallel with diagnostics and timeout
     print(f"🔍 Querying OpenAlex and ORKG Ask for: '{topic}'")
     print(f"📊 Search parameters: max_results={max_results}, min_year={min_year}")
-    
+
     with ThreadPoolExecutor(max_workers=2) as executor:
         openalex_future = executor.submit(query_openalex)
         orkg_future = executor.submit(query_orkg_ask)
-        
+
         try:
             openalex_results = openalex_future.result(timeout=30)
             orkg_results = orkg_future.result(timeout=30)
@@ -142,26 +152,38 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
             print(f"⚠️ Timeout or error occurred: {e}")
             # Get partial results if available
             try:
-                openalex_results = openalex_future.result(timeout=0.1) if not openalex_future.done() else openalex_future.result()
+                openalex_results = (
+                    openalex_future.result(timeout=0.1)
+                    if not openalex_future.done()
+                    else openalex_future.result()
+                )
             except:
                 openalex_results = []
             try:
-                orkg_results = orkg_future.result(timeout=0.1) if not orkg_future.done() else orkg_future.result()
+                orkg_results = (
+                    orkg_future.result(timeout=0.1)
+                    if not orkg_future.done()
+                    else orkg_future.result()
+                )
             except:
                 orkg_results = []
-    
+
     # Diagnostic output
     print(f"\n📊 OpenAlex returned {len(openalex_results)} results")
     for i, result in enumerate(openalex_results[:3], 1):
-        print(f"  {i}. {result.get('title', 'No title')[:60]}... (Citations: {result.get('citation_count', 0)})")
-    
+        print(
+            f"  {i}. {result.get('title', 'No title')[:60]}... (Citations: {result.get('citation_count', 0)})"
+        )
+
     print(f"\n🧠 ORKG Ask returned {len(orkg_results)} results")
     for i, result in enumerate(orkg_results[:3], 1):
-        print(f"  {i}. {result.get('title', 'No title')[:60]}... (Score: {result.get('relevance_score', 0):.2f})")
+        print(
+            f"  {i}. {result.get('title', 'No title')[:60]}... (Score: {result.get('relevance_score', 0):.2f})"
+        )
 
     # Process and merge results
     research_results = []
-    
+
     # Process OpenAlex results (convert inverted index abstracts)
     for r in openalex_results:
         if isinstance(r["abstract"], dict):
@@ -175,7 +197,7 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
             else:
                 r["abstract"] = ""
         research_results.append(r)
-    
+
     research_results.extend(orkg_results)
     # Filter by publication type and year (in case APIs returned extra)
     filtered_results = []
@@ -197,29 +219,35 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
 
     if not research_results:
         response_text += "❌ No research papers found matching your criteria.\n"
-        response_text += "Try broadening your search terms or adjusting the publication types."
+        response_text += (
+            "Try broadening your search terms or adjusting the publication types."
+        )
     else:
-        response_text += f"✅ **Found {len(research_results)} relevant research papers:**\n\n"
+        response_text += (
+            f"✅ **Found {len(research_results)} relevant research papers:**\n\n"
+        )
         for i, paper in enumerate(research_results, 1):
             response_text += f"**{i}. {paper.get('title', 'No title')}**\n"
-            authors = paper.get('authors')
+            authors = paper.get("authors")
             if isinstance(authors, list):
-                authors = ', '.join(authors)
+                authors = ", ".join(authors)
             response_text += f"   👥 Authors: {authors or 'N/A'}\n"
             response_text += f"   📅 Year: {paper.get('year', 'N/A')}\n"
             response_text += f"   📖 Published in: {paper.get('journal', 'N/A')}\n"
             response_text += f"   📈 Citations: {paper.get('citation_count', 0)}\n"
-            abstract = paper.get('abstract', 'N/A')
-            summary = abstract[:200] + '...' if len(abstract) > 200 else abstract
+            abstract = paper.get("abstract", "N/A")
+            summary = abstract[:200] + "..." if len(abstract) > 200 else abstract
             response_text += f"   📝 Summary: {summary}\n"
             response_text += f"   🔗 DOI: {paper.get('doi', 'N/A')}\n\n"
 
     response_text += "\n💡 **Note:** This tool uses OpenAlex for bibliographic data and ORKG Ask for semantic search. "
-    response_text += "ORKG Ask is built on CORE dataset with enhanced semantic capabilities. "
+    response_text += (
+        "ORKG Ask is built on CORE dataset with enhanced semantic capabilities. "
+    )
     response_text += "Citation counts indicate research impact and credibility."
 
     return {
         "toolUseId": tool_use_id,
         "status": "success",
-        "content": [{"text": response_text}]
+        "content": [{"text": response_text}],
     }

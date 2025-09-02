@@ -1,6 +1,7 @@
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # Add the project root to Python path
 project_root = Path(__file__).parent
@@ -16,8 +17,8 @@ def sample_tool_use():
             "topic": "machine learning",
             "max_results": 5,
             "publication_types": ["journal", "conference"],
-            "min_year": 2020
-        }
+            "min_year": 2020,
+        },
     }
 
 
@@ -35,7 +36,7 @@ def mock_openalex_response():
                 "abstract_inverted_index": {"machine": [0], "learning": [1]},
                 "relevance_score": 0.95,
                 "cited_by_count": 150,
-                "type": "journal-article"
+                "type": "journal-article",
             }
         ]
     }
@@ -55,7 +56,7 @@ def mock_orkg_response():
                     "doi": "10.5678/ai.2022",
                     "abstract": "Study on AI decision making",
                     "score": 0.88,
-                    "citation_count": 75
+                    "citation_count": 75,
                 }
             ]
         }
