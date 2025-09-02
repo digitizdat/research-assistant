@@ -2,7 +2,7 @@
 
 <div align="center">
   <div>
-    <a href="https://github.com;digitizdat/research-assistant">
+    <a href="https://github.com/digitizdat/research-assistant">
       <img src="logo.svg" alt="Research Assistant" width="55px" height="105px">
     </a>
   </div>
