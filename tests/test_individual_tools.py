@@ -1,8 +1,10 @@
 """Tests for individual OpenAlex and ORKG tools."""
-import pytest
 from unittest.mock import Mock, patch
-from openalex_tool import openalex_search, TOOL_SPEC as OPENALEX_SPEC
-from orkg_tool import orkg_search, TOOL_SPEC as ORKG_SPEC
+
+from openalex_tool import TOOL_SPEC as OPENALEX_SPEC
+from openalex_tool import openalex_search
+from orkg_tool import TOOL_SPEC as ORKG_SPEC
+from orkg_tool import orkg_search
 
 
 class TestOpenAlexTool:
@@ -171,10 +173,10 @@ class TestToolIntegration:
 
             # Reset mock for ORKG test
             mock_get.reset_mock()
-            
+
             # Test ORKG tool
             orkg_tool_use = {
-                "toolUseId": "test-orkg-independent", 
+                "toolUseId": "test-orkg-independent",
                 "input": {"topic": "test"}
             }
             orkg_result = orkg_search(orkg_tool_use)

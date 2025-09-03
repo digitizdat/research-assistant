@@ -1,5 +1,5 @@
-from datetime import datetime
 from typing import Any
+
 from strands.types.tools import ToolResult, ToolUse
 
 TOOL_SPEC = {
@@ -50,12 +50,12 @@ def openalex_search(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
     try:
         r = requests.get(url, params=params, timeout=30)
         print(f"📡 OpenAlex status: {r.status_code}")
-        
+
         if r.status_code == 200:
             data = r.json()
             results = data.get("results", [])
             print(f"OpenAlex results count: {len(results)}")
-            
+
             papers = []
             for item in results:
                 # Convert inverted index abstract

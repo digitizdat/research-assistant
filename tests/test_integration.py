@@ -1,7 +1,8 @@
 """Integration tests for the research workflow."""
-import pytest
 from unittest.mock import Mock, patch
-import asyncio
+
+import pytest
+
 from research_agents_workflow import run_research_workflow
 
 
@@ -25,13 +26,13 @@ class TestWorkflowIntegration:
                 # Mock agents
                 research_agent = Mock()
                 research_agent.return_value = "Research findings from scientific papers"
-                
+
                 web_agent = Mock()
                 web_agent.return_value = "Web research findings"
-                
+
                 analyst_agent = Mock()
                 analyst_agent.return_value = "Analysis: High quality papers with good citations"
-                
+
                 writer_agent = Mock()
                 writer_agent.return_value = "Final comprehensive report"
 
@@ -51,7 +52,7 @@ class TestWorkflowIntegration:
 
                     assert result == "Final comprehensive report"
                     assert mock_agent_class.call_count == 4
-                    
+
                     # Verify research agent was called with research_finder tool
                     research_agent_call = mock_agent_class.call_args_list[0]
                     assert "research_finder" in str(research_agent_call)
@@ -63,13 +64,13 @@ class TestWorkflowIntegration:
             # Mock agents that handle errors
             research_agent = Mock()
             research_agent.return_value = "No research papers found due to API issues"
-            
+
             web_agent = Mock()
             web_agent.return_value = "Limited web information available"
-            
+
             analyst_agent = Mock()
             analyst_agent.return_value = "Analysis: Limited data available, low confidence"
-            
+
             writer_agent = Mock()
             writer_agent.return_value = "Report: Insufficient data for comprehensive analysis"
 
@@ -96,13 +97,13 @@ class TestWorkflowIntegration:
             # Mock agents with simple responses
             research_agent = Mock()
             research_agent.return_value = "Research findings with filtering"
-            
+
             web_agent = Mock()
             web_agent.return_value = "Web findings"
-            
+
             analyst_agent = Mock()
             analyst_agent.return_value = "Analysis complete"
-            
+
             writer_agent = Mock()
             writer_agent.return_value = "Final filtered report"
 

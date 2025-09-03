@@ -1,6 +1,8 @@
 """Tests for research_finder configuration options."""
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
+
 from research_finder import research_finder
 
 

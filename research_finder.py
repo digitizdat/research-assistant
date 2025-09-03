@@ -1,11 +1,12 @@
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Any
-from concurrent.futures import ThreadPoolExecutor
 
 from strands.types.tools import ToolResult, ToolUse
+
+from config_manager import config
 from openalex_tool import openalex_search
 from orkg_tool import orkg_search
-from config_manager import config
 
 TOOL_SPEC = {
     "name": "research_finder",
@@ -49,14 +50,13 @@ TOOL_SPEC = {
 def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
     """
     AI agent for locating research from the past 20 years using OpenAlex and ORKG Ask APIs.
-    
     This tool coordinates between OpenAlex and ORKG search tools to provide comprehensive
     research findings with publication details, abstracts, and relevance assessments.
     """
     # Load configuration
     defaults = config.get_defaults()
     behavior_config = config.get_behavior_config()
-    
+
     tool_use_id = tool_use["toolUseId"]
     topic = tool_use["input"]["topic"]
     max_results = tool_use["input"].get("max_results", defaults.get("max_results", 10))
@@ -64,7 +64,7 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
         "publication_types", defaults.get("publication_types", ["journal", "conference"])
     )
     min_year = tool_use["input"].get("min_year", defaults.get("min_year", 2004))
-    
+
     # Check configuration and input overrides
     enable_openalex = tool_use["input"].get("enable_openalex", config.is_source_enabled("openalex"))
     enable_orkg = tool_use["input"].get("enable_orkg", config.is_source_enabled("orkg"))
@@ -76,12 +76,12 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
         enabled_sources.append("OpenAlex")
     if enable_orkg:
         enabled_sources.append("ORKG Ask")
-    
+
     print(f"🔍 Querying {', '.join(enabled_sources)} for: '{topic}'")
     print(f"📊 Search parameters: max_results={max_results}, min_year={min_year}")
 
     all_papers = []
-    
+
     if enable_openalex or enable_orkg:
         futures = []
         max_workers = behavior_config.get("max_workers", 2)
@@ -96,7 +96,7 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
                     }
                 }
                 futures.append(("openalex", executor.submit(openalex_search, openalex_tool_use)))
-            
+
             if enable_orkg:
                 orkg_tool_use = {
                     "toolUseId": f"{tool_use_id}-orkg",
@@ -133,21 +133,21 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
             pub_type = "journal"
         elif "conference" in paper.get('journal', '').lower():
             pub_type = "conference"
-        
+
         year = paper.get("year", 0)
         if isinstance(year, str) and year.isdigit():
             year = int(year)
         elif not isinstance(year, int):
             year = 0
-        
+
         # Check publication type
         type_match = any(pt in pub_type for pt in publication_types) if pub_type else True
         # Check year
         year_match = year >= min_year if year > 0 else True
-        
+
         if type_match and year_match:
             filtered_papers.append(paper)
-    
+
     # Limit results
     final_papers = filtered_papers[:max_results]
 
@@ -202,7 +202,7 @@ def parse_papers_from_content(content: str, source: str) -> list:
     papers = []
     lines = content.split('\n')
     current_paper = {}
-    
+
     for line in lines:
         line = line.strip()
         if line.startswith('**') and line.endswith('**') and '. ' in line:
@@ -236,9 +236,9 @@ def parse_papers_from_content(content: str, source: str) -> list:
             doi = line.replace('🔗 DOI:', '').strip()
             if doi != 'N/A':
                 current_paper['doi'] = doi
-    
+
     # Save last paper
     if current_paper.get('title'):
         papers.append(current_paper)
-    
+
     return papers

@@ -1,6 +1,8 @@
 """Functional tests for research_finder tool."""
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
+
 from research_finder import research_finder
 
 
@@ -25,7 +27,7 @@ class TestResearchFinderFunctional:
                         "host_venue": {"display_name": "Nature Machine Intelligence"},
                         "doi": "10.1038/s42256-021-00123-4",
                         "abstract_inverted_index": {
-                            "Deep": [0], "learning": [1], "has": [2], 
+                            "Deep": [0], "learning": [1], "has": [2],
                             "revolutionized": [3], "computer": [4], "vision": [5]
                         },
                         "relevance_score": 0.95,
@@ -308,7 +310,7 @@ class TestResearchFinderFunctional:
                     # Verify filter parameter is correctly constructed
                     assert "filter" in params
                     assert "year >= 2020" in params["filter"]
-                
+
                 mock_response = Mock()
                 mock_response.status_code = 200
                 mock_response.json.return_value = {
