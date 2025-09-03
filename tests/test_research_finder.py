@@ -1,7 +1,5 @@
 from unittest.mock import Mock, patch
 
-import pytest
-
 from research_finder import TOOL_SPEC, research_finder
 
 

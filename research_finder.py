@@ -97,44 +97,117 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
         return []
 
     def query_orkg_ask():
-        """Query ORKG Ask API for semantic search"""
+        """Query ORKG Ask API using official specification"""
+        import time
+        
+        # Official ORKG Ask API endpoint from specification
         url = "https://api.ask.orkg.org/index/search"
-        params = {"query": topic, "size": max_results // 2 if max_results > 1 else 1}
-        print(f"🔍 ORKG Ask URL: {url}")
-        print(f"📦 ORKG Ask params: {params}")
-        try:
-            r = requests.get(url, params=params, timeout=15)
-            print(f"📡 ORKG Ask request URL: {r.url}")
-            print(f"ORKG Ask status: {r.status_code}")
-            if r.status_code == 200:
-                response_text = r.text[:200] + "..." if len(r.text) > 200 else r.text
-                print(f"📄 ORKG Ask response preview: {response_text}")
-                data = r.json()
-                items = data.get("payload", {}).get("items", [])
-                print(f"ORKG Ask raw results count: {len(items)}")
-                return [
-                    {
-                        "title": item.get("title", ""),
-                        "authors": item.get("authors", []),
-                        "year": item.get("year", ""),
-                        "journal": item.get("venue", ""),
-                        "doi": item.get("doi", ""),
-                        "abstract": item.get("abstract", ""),
-                        "relevance_score": item.get("score", 0.9),
-                        "citation_count": item.get("citation_count", 0),
-                        "publication_type": "journal",
-                        "source": "ORKG",
-                    }
-                    for item in items
-                    if not item.get("year") or int(item.get("year", 0)) >= min_year
-                ]
-            else:
-                print(f"❌ ORKG Ask error response: {r.text[:200]}")
-        except Exception as e:
-            print(f"⚠️ ORKG Ask exception: {e}")
-            if "r" in locals():
-                print(f"📄 Raw response: {r.text[:100]}...")
-        return []
+        
+        # Parameters according to API spec
+        params = {
+            "query": topic,
+            "limit": max_results // 2 if max_results > 1 else 1,
+            "filter": f"year >= {min_year}" if min_year else None
+        }
+        
+        # Remove None values
+        params = {k: v for k, v in params.items() if v is not None}
+        
+        for attempt in range(3):  # 3 retry attempts
+            try:
+                print(f"🔍 ORKG Ask attempt {attempt + 1}")
+                
+                # Headers according to API best practices
+                headers = {
+                    "User-Agent": "Research-Assistant/1.0",
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                }
+                
+                r = requests.get(url, params=params, headers=headers, timeout=15)
+                print(f"📡 ORKG Ask status: {r.status_code}")
+                
+                if r.status_code == 200:
+                    try:
+                        data = r.json()
+                        
+                        # Parse according to QdrantPagedDocumentsResponse schema
+                        payload = data.get("payload", {})
+                        items = payload.get("items", [])
+                        
+                        print(f"ORKG Ask raw results count: {len(items)}")
+                        
+                        if items:
+                            results = []
+                            for item in items:
+                                # Extract fields according to QdrantDocument schema
+                                year_val = item.get("year")
+                                if year_val:
+                                    try:
+                                        year_int = int(year_val)
+                                        if year_int < min_year:
+                                            continue
+                                    except (ValueError, TypeError):
+                                        pass
+                                
+                                # Handle authors field (can be array or string)
+                                authors = item.get("authors", [])
+                                if isinstance(authors, str):
+                                    authors = [authors]
+                                elif not isinstance(authors, list):
+                                    authors = []
+                                
+                                # Handle journals field (array in spec)
+                                journals = item.get("journals", [])
+                                journal_name = ""
+                                if journals and isinstance(journals, list):
+                                    journal_name = journals[0]
+                                elif isinstance(journals, str):
+                                    journal_name = journals
+                                
+                                result = {
+                                    "title": item.get("title", ""),
+                                    "authors": authors,
+                                    "year": str(year_val) if year_val else "",
+                                    "journal": journal_name,
+                                    "doi": item.get("doi", ""),
+                                    "abstract": item.get("abstract", ""),
+                                    "relevance_score": 0.8,  # ORKG doesn't provide scores in search
+                                    "citation_count": int(item.get("citation_count", 0)),
+                                    "publication_type": item.get("document_type", "journal"),
+                                    "source": "ORKG",
+                                }
+                                
+                                if result["title"]:  # Only include if has title
+                                    results.append(result)
+                            
+                            return results
+                        
+                    except (ValueError, KeyError) as e:
+                        print(f"❌ ORKG JSON parsing error: {e}")
+                        print(f"📄 Response preview: {r.text[:200]}")
+                
+                elif r.status_code == 422:
+                    print(f"❌ ORKG validation error: {r.text[:200]}")
+                    break  # Don't retry validation errors
+                elif r.status_code == 429:
+                    print(f"⏳ ORKG rate limited, waiting...")
+                    time.sleep(2 ** attempt)
+                    continue
+                else:
+                    print(f"❌ ORKG error {r.status_code}: {r.text[:200]}")
+                    
+            except requests.exceptions.Timeout:
+                print(f"⏰ ORKG timeout on attempt {attempt + 1}")
+            except requests.exceptions.ConnectionError:
+                print(f"🔌 ORKG connection error on attempt {attempt + 1}")
+            except Exception as e:
+                print(f"⚠️ ORKG unexpected error: {e}")
+            
+            if attempt < 2:  # Don't sleep on last attempt
+                time.sleep(1 + attempt)  # Progressive delay
+        
+        print("❌ ORKG Ask failed after all attempts")
         return []
 
     # Execute API calls in parallel with diagnostics and timeout
@@ -147,7 +220,7 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
 
         try:
             openalex_results = openalex_future.result(timeout=30)
-            orkg_results = orkg_future.result(timeout=30)
+            orkg_results = orkg_future.result(timeout=50)
         except Exception as e:
             print(f"⚠️ Timeout or error occurred: {e}")
             # Get partial results if available

@@ -1,0 +1,11 @@
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+skips = ["B101"]
