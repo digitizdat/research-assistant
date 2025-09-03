@@ -1,11 +1,15 @@
 from datetime import datetime
 from typing import Any
+from concurrent.futures import ThreadPoolExecutor
 
 from strands.types.tools import ToolResult, ToolUse
+from openalex_tool import openalex_search
+from orkg_tool import orkg_search
+from config_manager import config
 
 TOOL_SPEC = {
     "name": "research_finder",
-    "description": "AI agent for locating research from the past 20 years related to a given topic. Searches OpenAlex for bibliographic data and ORKG Ask for semantic search in parallel to provide comprehensive research findings with publication details, abstracts, and relevance scores.",
+    "description": "AI agent for locating research from the past 20 years related to a given topic. Coordinates OpenAlex and ORKG Ask searches to provide comprehensive research findings with publication details, abstracts, and relevance scores.",
     "inputSchema": {
         "json": {
             "type": "object",
@@ -16,19 +20,24 @@ TOOL_SPEC = {
                 },
                 "max_results": {
                     "type": "integer",
-                    "description": "Maximum number of research papers to return (default: 10)",
-                    "default": 10,
+                    "description": "Maximum number of research papers to return (configurable via config.yaml)",
                 },
                 "publication_types": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Types of publications to include (e.g., 'journal', 'conference', 'preprint')",
-                    "default": ["journal", "conference"],
+                    "description": "Types of publications to include (configurable via config.yaml)",
                 },
                 "min_year": {
                     "type": "integer",
-                    "description": "Minimum publication year (default: 20 years ago)",
-                    "default": 2004,
+                    "description": "Minimum publication year (configurable via config.yaml)",
+                },
+                "enable_openalex": {
+                    "type": "boolean",
+                    "description": "Override OpenAlex API setting from config.yaml",
+                },
+                "enable_orkg": {
+                    "type": "boolean",
+                    "description": "Override ORKG Ask API setting from config.yaml",
                 },
             },
             "required": ["topic"],
@@ -39,250 +48,110 @@ TOOL_SPEC = {
 
 def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
     """
-    AI agent for locating research from the past 20 years related to a given topic using open-access aggregators.
-
-    This tool queries OpenAlex and ORKG Ask APIs in parallel to provide structured research findings
-    including publication details, abstracts, and relevance assessments. ORKG Ask provides semantic search on CORE data.
+    AI agent for locating research from the past 20 years using OpenAlex and ORKG Ask APIs.
+    
+    This tool coordinates between OpenAlex and ORKG search tools to provide comprehensive
+    research findings with publication details, abstracts, and relevance assessments.
     """
-    from concurrent.futures import ThreadPoolExecutor
-
-    import requests
-
+    # Load configuration
+    defaults = config.get_defaults()
+    behavior_config = config.get_behavior_config()
+    
     tool_use_id = tool_use["toolUseId"]
     topic = tool_use["input"]["topic"]
-    max_results = tool_use["input"].get("max_results", 10)
+    max_results = tool_use["input"].get("max_results", defaults.get("max_results", 10))
     publication_types = tool_use["input"].get(
-        "publication_types", ["journal", "conference"]
+        "publication_types", defaults.get("publication_types", ["journal", "conference"])
     )
-    min_year = tool_use["input"].get("min_year", 2004)
+    min_year = tool_use["input"].get("min_year", defaults.get("min_year", 2004))
+    
+    # Check configuration and input overrides
+    enable_openalex = tool_use["input"].get("enable_openalex", config.is_source_enabled("openalex"))
+    enable_orkg = tool_use["input"].get("enable_orkg", config.is_source_enabled("orkg"))
     current_year = datetime.now().year
 
-    def query_openalex():
-        """Query OpenAlex API"""
-        url = "https://api.openalex.org/works"
-        params = {
-            "search": topic,
-            "filter": f"from_publication_date:{min_year}-01-01",
-            "sort": "relevance_score:desc",
-            "per-page": max_results // 2 if max_results > 1 else 1,
-        }
-        try:
-            r = requests.get(url, params=params, timeout=10)
-            print(f"📡 OpenAlex status: {r.status_code}")
-            if r.status_code == 200:
-                data = r.json()
-                results = data.get("results", [])
-                print(f"OpenAlex raw results count: {len(results)}")
-                return [
-                    {
-                        "title": item.get("title"),
-                        "authors": [
-                            a.get("author", {}).get("display_name", "")
-                            for a in item.get("authorships", [])
-                        ],
-                        "year": item.get("publication_year"),
-                        "journal": item.get("host_venue", {}).get("display_name", ""),
-                        "doi": item.get("doi", ""),
-                        "abstract": item.get("abstract_inverted_index", {}),
-                        "relevance_score": item.get("relevance_score", 0.0),
-                        "citation_count": item.get("cited_by_count", 0),
-                        "publication_type": item.get("type", ""),
-                    }
-                    for item in results
-                ]
-            else:
-                print(f"OpenAlex error: {r.text[:200]}")
-        except Exception as e:
-            print(f"OpenAlex exception: {e}")
-        return []
-
-    def query_orkg_ask():
-        """Query ORKG Ask API using official specification"""
-        import time
-        
-        # Official ORKG Ask API endpoint from specification
-        url = "https://api.ask.orkg.org/index/search"
-        
-        # Parameters according to API spec
-        params = {
-            "query": topic,
-            "limit": max_results // 2 if max_results > 1 else 1,
-            "filter": f"year >= {min_year}" if min_year else None
-        }
-        
-        # Remove None values
-        params = {k: v for k, v in params.items() if v is not None}
-        
-        for attempt in range(3):  # 3 retry attempts
-            try:
-                print(f"🔍 ORKG Ask attempt {attempt + 1}")
-                
-                # Headers according to API best practices
-                headers = {
-                    "User-Agent": "Research-Assistant/1.0",
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                }
-                
-                r = requests.get(url, params=params, headers=headers, timeout=15)
-                print(f"📡 ORKG Ask status: {r.status_code}")
-                
-                if r.status_code == 200:
-                    try:
-                        data = r.json()
-                        
-                        # Parse according to QdrantPagedDocumentsResponse schema
-                        payload = data.get("payload", {})
-                        items = payload.get("items", [])
-                        
-                        print(f"ORKG Ask raw results count: {len(items)}")
-                        
-                        if items:
-                            results = []
-                            for item in items:
-                                # Extract fields according to QdrantDocument schema
-                                year_val = item.get("year")
-                                if year_val:
-                                    try:
-                                        year_int = int(year_val)
-                                        if year_int < min_year:
-                                            continue
-                                    except (ValueError, TypeError):
-                                        pass
-                                
-                                # Handle authors field (can be array or string)
-                                authors = item.get("authors", [])
-                                if isinstance(authors, str):
-                                    authors = [authors]
-                                elif not isinstance(authors, list):
-                                    authors = []
-                                
-                                # Handle journals field (array in spec)
-                                journals = item.get("journals", [])
-                                journal_name = ""
-                                if journals and isinstance(journals, list):
-                                    journal_name = journals[0]
-                                elif isinstance(journals, str):
-                                    journal_name = journals
-                                
-                                result = {
-                                    "title": item.get("title", ""),
-                                    "authors": authors,
-                                    "year": str(year_val) if year_val else "",
-                                    "journal": journal_name,
-                                    "doi": item.get("doi", ""),
-                                    "abstract": item.get("abstract", ""),
-                                    "relevance_score": 0.8,  # ORKG doesn't provide scores in search
-                                    "citation_count": int(item.get("citation_count", 0)),
-                                    "publication_type": item.get("document_type", "journal"),
-                                    "source": "ORKG",
-                                }
-                                
-                                if result["title"]:  # Only include if has title
-                                    results.append(result)
-                            
-                            return results
-                        
-                    except (ValueError, KeyError) as e:
-                        print(f"❌ ORKG JSON parsing error: {e}")
-                        print(f"📄 Response preview: {r.text[:200]}")
-                
-                elif r.status_code == 422:
-                    print(f"❌ ORKG validation error: {r.text[:200]}")
-                    break  # Don't retry validation errors
-                elif r.status_code == 429:
-                    print(f"⏳ ORKG rate limited, waiting...")
-                    time.sleep(2 ** attempt)
-                    continue
-                else:
-                    print(f"❌ ORKG error {r.status_code}: {r.text[:200]}")
-                    
-            except requests.exceptions.Timeout:
-                print(f"⏰ ORKG timeout on attempt {attempt + 1}")
-            except requests.exceptions.ConnectionError:
-                print(f"🔌 ORKG connection error on attempt {attempt + 1}")
-            except Exception as e:
-                print(f"⚠️ ORKG unexpected error: {e}")
-            
-            if attempt < 2:  # Don't sleep on last attempt
-                time.sleep(1 + attempt)  # Progressive delay
-        
-        print("❌ ORKG Ask failed after all attempts")
-        return []
-
-    # Execute API calls in parallel with diagnostics and timeout
-    print(f"🔍 Querying OpenAlex and ORKG Ask for: '{topic}'")
+    # Execute searches and collect raw results
+    enabled_sources = []
+    if enable_openalex:
+        enabled_sources.append("OpenAlex")
+    if enable_orkg:
+        enabled_sources.append("ORKG Ask")
+    
+    print(f"🔍 Querying {', '.join(enabled_sources)} for: '{topic}'")
     print(f"📊 Search parameters: max_results={max_results}, min_year={min_year}")
 
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        openalex_future = executor.submit(query_openalex)
-        orkg_future = executor.submit(query_orkg_ask)
+    all_papers = []
+    
+    if enable_openalex or enable_orkg:
+        futures = []
+        max_workers = behavior_config.get("max_workers", 2)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            if enable_openalex:
+                openalex_tool_use = {
+                    "toolUseId": f"{tool_use_id}-openalex",
+                    "input": {
+                        "topic": topic,
+                        "max_results": max_results,
+                        "min_year": min_year
+                    }
+                }
+                futures.append(("openalex", executor.submit(openalex_search, openalex_tool_use)))
+            
+            if enable_orkg:
+                orkg_tool_use = {
+                    "toolUseId": f"{tool_use_id}-orkg",
+                    "input": {
+                        "topic": topic,
+                        "max_results": max_results,
+                        "min_year": min_year
+                    }
+                }
+                futures.append(("orkg", executor.submit(orkg_search, orkg_tool_use)))
 
-        try:
-            openalex_results = openalex_future.result(timeout=30)
-            orkg_results = orkg_future.result(timeout=50)
-        except Exception as e:
-            print(f"⚠️ Timeout or error occurred: {e}")
-            # Get partial results if available
-            try:
-                openalex_results = (
-                    openalex_future.result(timeout=0.1)
-                    if not openalex_future.done()
-                    else openalex_future.result()
-                )
-            except:
-                openalex_results = []
-            try:
-                orkg_results = (
-                    orkg_future.result(timeout=0.1)
-                    if not orkg_future.done()
-                    else orkg_future.result()
-                )
-            except:
-                orkg_results = []
+            # Collect results and extract paper data
+            for source, future in futures:
+                try:
+                    source_config = config.get_source_config(source)
+                    timeout = source_config.get("timeout", 60 if source == "orkg" else 40)
+                    result = future.result(timeout=timeout)
+                    if result["status"] == "success":
+                        content = result["content"][0]["text"]
+                        # Parse papers from tool output
+                        papers = parse_papers_from_content(content, source)
+                        all_papers.extend(papers)
+                except Exception as e:
+                    print(f"⚠️ {source} error: {e}")
+    else:
+        print("⚠️ No research sources enabled")
 
-    # Diagnostic output
-    print(f"\n📊 OpenAlex returned {len(openalex_results)} results")
-    for i, result in enumerate(openalex_results[:3], 1):
-        print(
-            f"  {i}. {result.get('title', 'No title')[:60]}... (Citations: {result.get('citation_count', 0)})"
-        )
-
-    print(f"\n🧠 ORKG Ask returned {len(orkg_results)} results")
-    for i, result in enumerate(orkg_results[:3], 1):
-        print(
-            f"  {i}. {result.get('title', 'No title')[:60]}... (Score: {result.get('relevance_score', 0):.2f})"
-        )
-
-    # Process and merge results
-    research_results = []
-
-    # Process OpenAlex results (convert inverted index abstracts)
-    for r in openalex_results:
-        if isinstance(r["abstract"], dict):
-            idx = r["abstract"]
-            if idx:
-                words = [None] * (max([max(v) for v in idx.values()]) + 1)
-                for word, positions in idx.items():
-                    for pos in positions:
-                        words[pos] = word
-                r["abstract"] = " ".join([w for w in words if w])
-            else:
-                r["abstract"] = ""
-        research_results.append(r)
-
-    research_results.extend(orkg_results)
-    # Filter by publication type and year (in case APIs returned extra)
-    filtered_results = []
-    for result in research_results:
-        pub_type = result.get("publication_type", "").lower()
-        year = int(result.get("year", 0)) if result.get("year") else 0
-        if any(pt in pub_type for pt in publication_types) and year >= min_year:
-            filtered_results.append(result)
+    # Filter by publication type and year
+    filtered_papers = []
+    for paper in all_papers:
+        # Get publication type from paper data
+        pub_type = ""
+        if paper.get('journal'):
+            pub_type = "journal"
+        elif "conference" in paper.get('journal', '').lower():
+            pub_type = "conference"
+        
+        year = paper.get("year", 0)
+        if isinstance(year, str) and year.isdigit():
+            year = int(year)
+        elif not isinstance(year, int):
+            year = 0
+        
+        # Check publication type
+        type_match = any(pt in pub_type for pt in publication_types) if pub_type else True
+        # Check year
+        year_match = year >= min_year if year > 0 else True
+        
+        if type_match and year_match:
+            filtered_papers.append(paper)
+    
     # Limit results
-    research_results = filtered_results[:max_results]
+    final_papers = filtered_papers[:max_results]
 
-    # Format the response
+    # Format response
     response_text = f"🔬 **Research Finder Results for: '{topic}'**\n\n"
     response_text += "📊 **Search Parameters:**\n"
     response_text += f"- Topic: {topic}\n"
@@ -290,18 +159,11 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
     response_text += f"- Publication Types: {', '.join(publication_types)}\n"
     response_text += f"- Max Results: {max_results}\n\n"
 
-    if not research_results:
-        response_text += "❌ No research papers found matching your criteria.\n"
-        response_text += (
-            "Try broadening your search terms or adjusting the publication types."
-        )
-    else:
-        response_text += (
-            f"✅ **Found {len(research_results)} relevant research papers:**\n\n"
-        )
-        for i, paper in enumerate(research_results, 1):
+    if final_papers:
+        response_text += f"✅ **Found {len(final_papers)} relevant research papers:**\n\n"
+        for i, paper in enumerate(final_papers, 1):
             response_text += f"**{i}. {paper.get('title', 'No title')}**\n"
-            authors = paper.get("authors")
+            authors = paper.get("authors", [])
             if isinstance(authors, list):
                 authors = ", ".join(authors)
             response_text += f"   👥 Authors: {authors or 'N/A'}\n"
@@ -312,11 +174,20 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
             summary = abstract[:200] + "..." if len(abstract) > 200 else abstract
             response_text += f"   📝 Summary: {summary}\n"
             response_text += f"   🔗 DOI: {paper.get('doi', 'N/A')}\n\n"
+    else:
+        response_text += "❌ No research papers found matching your criteria.\n"
+        response_text += "Try broadening your search terms or adjusting the publication types.\n"
 
-    response_text += "\n💡 **Note:** This tool uses OpenAlex for bibliographic data and ORKG Ask for semantic search. "
-    response_text += (
-        "ORKG Ask is built on CORE dataset with enhanced semantic capabilities. "
-    )
+    # Add note about enabled sources
+    response_text += "\n💡 **Note:** "
+    if enable_openalex and enable_orkg:
+        response_text += "This tool uses OpenAlex for bibliographic data and ORKG Ask for semantic search. "
+    elif enable_openalex:
+        response_text += "This tool uses OpenAlex for bibliographic data. "
+    elif enable_orkg:
+        response_text += "This tool uses ORKG Ask for semantic search on CORE dataset. "
+    else:
+        response_text += "No research sources were enabled for this query. "
     response_text += "Citation counts indicate research impact and credibility."
 
     return {
@@ -324,3 +195,50 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
         "status": "success",
         "content": [{"text": response_text}],
     }
+
+
+def parse_papers_from_content(content: str, source: str) -> list:
+    """Parse paper data from tool output content."""
+    papers = []
+    lines = content.split('\n')
+    current_paper = {}
+    
+    for line in lines:
+        line = line.strip()
+        if line.startswith('**') and line.endswith('**') and '. ' in line:
+            # Save previous paper
+            if current_paper.get('title'):
+                papers.append(current_paper)
+            # Start new paper
+            title = line.replace('**', '').split('. ', 1)[1] if '. ' in line else line.replace('**', '')
+            current_paper = {'title': title, 'source': source}
+        elif line.startswith('👥 Authors:'):
+            authors_str = line.replace('👥 Authors:', '').strip()
+            if authors_str != 'N/A':
+                current_paper['authors'] = [a.strip() for a in authors_str.split(',')]
+        elif line.startswith('📅 Year:'):
+            year_str = line.replace('📅 Year:', '').strip()
+            if year_str != 'N/A' and year_str.isdigit():
+                current_paper['year'] = int(year_str)
+        elif line.startswith('📖 Published in:'):
+            journal = line.replace('📖 Published in:', '').strip()
+            if journal != 'N/A':
+                current_paper['journal'] = journal
+        elif line.startswith('📈 Citations:'):
+            citations_str = line.replace('📈 Citations:', '').strip()
+            if citations_str.isdigit():
+                current_paper['citation_count'] = int(citations_str)
+        elif line.startswith('📝 Summary:'):
+            abstract = line.replace('📝 Summary:', '').strip()
+            if abstract != 'N/A':
+                current_paper['abstract'] = abstract
+        elif line.startswith('🔗 DOI:'):
+            doi = line.replace('🔗 DOI:', '').strip()
+            if doi != 'N/A':
+                current_paper['doi'] = doi
+    
+    # Save last paper
+    if current_paper.get('title'):
+        papers.append(current_paper)
+    
+    return papers
