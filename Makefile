@@ -28,12 +28,13 @@ test:
 
 lint:
 	ruff check --fix --ignore E722 .
+	find . -name "*.yml" -o -name "*.yaml" |xargs -t yamllint -c .yamllint.yaml
 
 format:
 	ruff format .
 
 security:
-	bandit -r . -x ./test_*.py
+	bandit -r . -x ./tests
 
 check: lint security test
 	@echo "All checks passed!"
