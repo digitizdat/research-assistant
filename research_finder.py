@@ -7,6 +7,7 @@ from strands.types.tools import ToolResult, ToolUse
 from config_manager import config
 from openalex_tool import openalex_search
 from orkg_tool import orkg_search
+from core_tool import core_search
 
 TOOL_SPEC = {
     "name": "research_finder",
@@ -40,6 +41,10 @@ TOOL_SPEC = {
                     "type": "boolean",
                     "description": "Override ORKG Ask API setting from config.yaml",
                 },
+                "enable_core": {
+                    "type": "boolean",
+                    "description": "Override CORE API setting from config.yaml",
+                },
             },
             "required": ["topic"],
         }
@@ -68,6 +73,7 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
     # Check configuration and input overrides
     enable_openalex = tool_use["input"].get("enable_openalex", config.is_source_enabled("openalex"))
     enable_orkg = tool_use["input"].get("enable_orkg", config.is_source_enabled("orkg"))
+    enable_core = tool_use["input"].get("enable_core", config.is_source_enabled("core"))
     current_year = datetime.now().year
 
     # Execute searches and collect raw results
@@ -76,15 +82,17 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
         enabled_sources.append("OpenAlex")
     if enable_orkg:
         enabled_sources.append("ORKG Ask")
+    if enable_core:
+        enabled_sources.append("CORE")
 
     print(f"🔍 Querying {', '.join(enabled_sources)} for: '{topic}'")
     print(f"📊 Search parameters: max_results={max_results}, min_year={min_year}")
 
     all_papers = []
 
-    if enable_openalex or enable_orkg:
+    if enable_openalex or enable_orkg or enable_core:
         futures = []
-        max_workers = behavior_config.get("max_workers", 2)
+        max_workers = behavior_config.get("max_workers", 3)
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             if enable_openalex:
                 openalex_tool_use = {
@@ -107,12 +115,24 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
                     }
                 }
                 futures.append(("orkg", executor.submit(orkg_search, orkg_tool_use)))
+                
+            if enable_core:
+                core_tool_use = {
+                    "toolUseId": f"{tool_use_id}-core",
+                    "input": {
+                        "topic": topic,
+                        "max_results": max_results,
+                        "min_year": min_year
+                    }
+                }
+                futures.append(("core", executor.submit(core_search, core_tool_use)))
 
             # Collect results and extract paper data
             for source, future in futures:
                 try:
                     source_config = config.get_source_config(source)
-                    timeout = source_config.get("timeout", 60 if source == "orkg" else 40)
+                    default_timeout = 60 if source == "orkg" else 15 if source == "core" else 40
+                    timeout = source_config.get("timeout", default_timeout)
                     result = future.result(timeout=timeout)
                     if result["status"] == "success":
                         content = result["content"][0]["text"]
@@ -180,12 +200,16 @@ def research_finder(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
 
     # Add note about enabled sources
     response_text += "\n💡 **Note:** "
-    if enable_openalex and enable_orkg:
-        response_text += "This tool uses OpenAlex for bibliographic data and ORKG Ask for semantic search. "
-    elif enable_openalex:
-        response_text += "This tool uses OpenAlex for bibliographic data. "
-    elif enable_orkg:
-        response_text += "This tool uses ORKG Ask for semantic search on CORE dataset. "
+    active_sources = []
+    if enable_openalex:
+        active_sources.append("OpenAlex for bibliographic data")
+    if enable_orkg:
+        active_sources.append("ORKG Ask for semantic search")
+    if enable_core:
+        active_sources.append("CORE for open access papers")
+    
+    if active_sources:
+        response_text += f"This tool uses {', '.join(active_sources)}. "
     else:
         response_text += "No research sources were enabled for this query. "
     response_text += "Citation counts indicate research impact and credibility."

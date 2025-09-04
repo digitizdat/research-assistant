@@ -15,6 +15,14 @@ sources:
     base_url: "https://api.ask.orkg.org/index/search"
     retry_attempts: 3
     retry_delay: 1
+    
+  core:
+    enabled: true
+    timeout: 15
+    max_results_per_source: 10
+    base_url: "https://api.core.ac.uk/v3/search/works"
+    retry_attempts: 3
+    retry_delay: 1
 
 # Default Search Parameters
 defaults:
@@ -27,6 +35,6 @@ defaults:
 # Tool Behavior
 behavior:
   parallel_execution: true
-  max_workers: 2
+  max_workers: 3
   filter_duplicates: true
   sort_by_citations: false
