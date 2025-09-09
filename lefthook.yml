@@ -1,0 +1,16 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      run: ruff check --fix src/ tests/
+    format:
+      run: ruff format src/ tests/
+    security:
+      run: bandit -r src/
+    test:
+      run: pytest tests/ -v
+
+pre-push:
+  commands:
+    full-check:
+      run: make check
