@@ -29,6 +29,7 @@ Thumbs.db
 # Project specific
 .research_history
 *.log
+session-environment.sh
 
 # Linting/formatting
 .ruff_cache/

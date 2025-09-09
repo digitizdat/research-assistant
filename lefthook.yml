@@ -9,6 +9,8 @@ pre-commit:
       run: bandit -r src/
     test:
       run: pytest tests/ -v
+    secrets:
+      run: git secrets --scan
 
 pre-push:
   commands:
