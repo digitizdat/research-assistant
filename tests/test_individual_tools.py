@@ -1,4 +1,5 @@
 """Tests for individual OpenAlex and ORKG tools."""
+
 from unittest.mock import Mock, patch
 
 from openalex_tool import TOOL_SPEC as OPENALEX_SPEC
@@ -22,23 +23,25 @@ class TestOpenAlexTool:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "results": [{
-                "title": "Test OpenAlex Paper",
-                "authorships": [{"author": {"display_name": "Test Author"}}],
-                "publication_year": 2023,
-                "host_venue": {"display_name": "Test Journal"},
-                "doi": "10.1234/test",
-                "abstract_inverted_index": {"test": [0], "paper": [1]},
-                "relevance_score": 0.9,
-                "cited_by_count": 15,
-                "type": "journal-article"
-            }]
+            "results": [
+                {
+                    "title": "Test OpenAlex Paper",
+                    "authorships": [{"author": {"display_name": "Test Author"}}],
+                    "publication_year": 2023,
+                    "host_venue": {"display_name": "Test Journal"},
+                    "doi": "10.1234/test",
+                    "abstract_inverted_index": {"test": [0], "paper": [1]},
+                    "relevance_score": 0.9,
+                    "cited_by_count": 15,
+                    "type": "journal-article",
+                }
+            ]
         }
         mock_get.return_value = mock_response
 
         tool_use = {
             "toolUseId": "test-openalex",
-            "input": {"topic": "test", "max_results": 5}
+            "input": {"topic": "test", "max_results": 5},
         }
 
         result = openalex_search(tool_use)
@@ -57,10 +60,7 @@ class TestOpenAlexTool:
         mock_response.text = "Server Error"
         mock_get.return_value = mock_response
 
-        tool_use = {
-            "toolUseId": "test-openalex-fail",
-            "input": {"topic": "test"}
-        }
+        tool_use = {"toolUseId": "test-openalex-fail", "input": {"topic": "test"}}
 
         result = openalex_search(tool_use)
 
@@ -85,23 +85,25 @@ class TestORKGTool:
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "payload": {
-                "items": [{
-                    "title": "Test ORKG Paper",
-                    "authors": ["ORKG Author"],
-                    "year": 2023,
-                    "journals": ["ORKG Journal"],
-                    "doi": "10.5678/orkg",
-                    "abstract": "Test ORKG abstract",
-                    "citation_count": 10,
-                    "document_type": "journal"
-                }]
+                "items": [
+                    {
+                        "title": "Test ORKG Paper",
+                        "authors": ["ORKG Author"],
+                        "year": 2023,
+                        "journals": ["ORKG Journal"],
+                        "doi": "10.5678/orkg",
+                        "abstract": "Test ORKG abstract",
+                        "citation_count": 10,
+                        "document_type": "journal",
+                    }
+                ]
             }
         }
         mock_get.return_value = mock_response
 
         tool_use = {
             "toolUseId": "test-orkg",
-            "input": {"topic": "test", "max_results": 5}
+            "input": {"topic": "test", "max_results": 5},
         }
 
         result = orkg_search(tool_use)
@@ -117,10 +119,7 @@ class TestORKGTool:
         """Test ORKG search failure handling."""
         mock_get.side_effect = Exception("Connection failed")
 
-        tool_use = {
-            "toolUseId": "test-orkg-fail",
-            "input": {"topic": "test"}
-        }
+        tool_use = {"toolUseId": "test-orkg-fail", "input": {"topic": "test"}}
 
         result = orkg_search(tool_use)
 
@@ -135,15 +134,12 @@ class TestORKGTool:
         responses = [
             Mock(status_code=429),
             Mock(status_code=429),
-            Mock(status_code=200)
+            Mock(status_code=200),
         ]
         responses[2].json.return_value = {"payload": {"items": []}}
         mock_get.side_effect = responses
 
-        tool_use = {
-            "toolUseId": "test-orkg-retry",
-            "input": {"topic": "test"}
-        }
+        tool_use = {"toolUseId": "test-orkg-retry", "input": {"topic": "test"}}
 
         result = orkg_search(tool_use)
 
@@ -166,7 +162,7 @@ class TestToolIntegration:
             # Test OpenAlex tool
             openalex_tool_use = {
                 "toolUseId": "test-openalex-independent",
-                "input": {"topic": "test"}
+                "input": {"topic": "test"},
             }
             openalex_result = openalex_search(openalex_tool_use)
             assert openalex_result["status"] == "success"
@@ -177,7 +173,7 @@ class TestToolIntegration:
             # Test ORKG tool
             orkg_tool_use = {
                 "toolUseId": "test-orkg-independent",
-                "input": {"topic": "test"}
+                "input": {"topic": "test"},
             }
             orkg_result = orkg_search(orkg_tool_use)
             assert orkg_result["status"] == "success"

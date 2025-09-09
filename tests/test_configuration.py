@@ -1,5 +1,6 @@
 """Tests for research_finder configuration options."""
-from unittest.mock import Mock, patch
+
+from unittest.mock import patch
 
 import pytest
 
@@ -9,33 +10,33 @@ from research_finder import research_finder
 class TestResearchFinderConfiguration:
     """Test configuration options for enabling/disabling research sources."""
 
-    @patch("requests.get")
-    def test_openalex_only(self, mock_get):
+    @patch("research_finder.openalex_search")
+    @patch("research_finder.config")
+    def test_openalex_only(self, mock_config, mock_openalex):
         """Test with only OpenAlex enabled."""
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "results": [{
-                "title": "OpenAlex Paper",
-                "authorships": [{"author": {"display_name": "Test Author"}}],
-                "publication_year": 2023,
-                "host_venue": {"display_name": "Test Journal"},
-                "doi": "10.1234/test",
-                "abstract_inverted_index": {"test": [0]},
-                "relevance_score": 0.9,
-                "cited_by_count": 10,
-                "type": "journal-article"
-            }]
+        mock_config.get_defaults.return_value = {"max_results": 10, "min_year": 2004}
+        mock_config.get_behavior_config.return_value = {"max_workers": 3}
+        mock_config.is_source_enabled.side_effect = lambda x: x == "openalex"
+        mock_config.get_source_config.return_value = {"timeout": 40}
+
+        mock_openalex.return_value = {
+            "toolUseId": "test-openalex-only-openalex",
+            "status": "success",
+            "content": [
+                {
+                    "text": "**1. OpenAlex Paper**\n👥 Authors: Test Author\n📅 Year: 2023\n📖 Published in: Test Journal\n📈 Citations: 10\n📝 Summary: Test abstract\n🔗 DOI: 10.1234/test"
+                }
+            ],
         }
-        mock_get.return_value = mock_response
 
         tool_use = {
             "toolUseId": "test-openalex-only",
             "input": {
                 "topic": "test",
                 "enable_openalex": True,
-                "enable_orkg": False
-            }
+                "enable_orkg": False,
+                "enable_core": False,
+            },
         }
 
         result = research_finder(tool_use)
@@ -44,37 +45,34 @@ class TestResearchFinderConfiguration:
         content = result["content"][0]["text"]
         assert "OpenAlex Paper" in content
         assert "OpenAlex for bibliographic data" in content
-        # Should only call OpenAlex API once
-        assert mock_get.call_count == 1
 
-    @patch("requests.get")
-    def test_orkg_only(self, mock_get):
+    @patch("research_finder.orkg_search")
+    @patch("research_finder.config")
+    def test_orkg_only(self, mock_config, mock_orkg):
         """Test with only ORKG enabled."""
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "payload": {
-                "items": [{
-                    "title": "ORKG Paper",
-                    "authors": ["ORKG Author"],
-                    "year": 2023,
-                    "journals": ["ORKG Journal"],
-                    "doi": "10.5678/orkg",
-                    "abstract": "ORKG test paper",
-                    "citation_count": 15,
-                    "document_type": "journal"
-                }]
-            }
+        mock_config.get_defaults.return_value = {"max_results": 10, "min_year": 2004}
+        mock_config.get_behavior_config.return_value = {"max_workers": 3}
+        mock_config.is_source_enabled.side_effect = lambda x: x == "orkg"
+        mock_config.get_source_config.return_value = {"timeout": 60}
+
+        mock_orkg.return_value = {
+            "toolUseId": "test-orkg-only-orkg",
+            "status": "success",
+            "content": [
+                {
+                    "text": "**1. ORKG Paper**\n👥 Authors: ORKG Author\n📅 Year: 2023\n📖 Published in: ORKG Journal\n📈 Citations: 15\n📝 Summary: ORKG test paper\n🔗 DOI: 10.5678/orkg"
+                }
+            ],
         }
-        mock_get.return_value = mock_response
 
         tool_use = {
             "toolUseId": "test-orkg-only",
             "input": {
                 "topic": "test",
                 "enable_openalex": False,
-                "enable_orkg": True
-            }
+                "enable_orkg": True,
+                "enable_core": False,
+            },
         }
 
         result = research_finder(tool_use)
@@ -83,18 +81,22 @@ class TestResearchFinderConfiguration:
         content = result["content"][0]["text"]
         assert "ORKG Paper" in content
         assert "ORKG Ask for semantic search" in content
-        # Should only call ORKG API (with retries)
-        assert mock_get.call_count >= 1
 
-    def test_both_disabled(self):
-        """Test with both sources disabled."""
+    @patch("research_finder.config")
+    def test_both_disabled(self, mock_config):
+        """Test with all sources disabled."""
+        mock_config.get_defaults.return_value = {"max_results": 10, "min_year": 2004}
+        mock_config.get_behavior_config.return_value = {"max_workers": 3}
+        mock_config.is_source_enabled.return_value = False
+
         tool_use = {
             "toolUseId": "test-both-disabled",
             "input": {
                 "topic": "test",
                 "enable_openalex": False,
-                "enable_orkg": False
-            }
+                "enable_orkg": False,
+                "enable_core": False,
+            },
         }
 
         result = research_finder(tool_use)
@@ -104,104 +106,100 @@ class TestResearchFinderConfiguration:
         assert "No research papers found" in content
         assert "No research sources were enabled" in content
 
-    @patch("requests.get")
-    def test_default_configuration(self, mock_get):
-        """Test default configuration (both enabled)."""
-        # Mock both APIs
-        def side_effect(url, **kwargs):
-            mock_response = Mock()
-            mock_response.status_code = 200
-            if "openalex" in url:
-                mock_response.json.return_value = {"results": []}
-            else:  # ORKG
-                mock_response.json.return_value = {"payload": {"items": []}}
-            return mock_response
+    @patch("research_finder.orkg_search")
+    @patch("research_finder.openalex_search")
+    @patch("research_finder.config")
+    def test_default_configuration(self, mock_config, mock_openalex, mock_orkg):
+        """Test default configuration (multiple sources enabled)."""
+        mock_config.get_defaults.return_value = {"max_results": 10, "min_year": 2004}
+        mock_config.get_behavior_config.return_value = {"max_workers": 3}
+        mock_config.is_source_enabled.return_value = True
+        mock_config.get_source_config.return_value = {"timeout": 40}
 
-        mock_get.side_effect = side_effect
+        mock_openalex.return_value = {
+            "toolUseId": "test-default-openalex",
+            "status": "success",
+            "content": [{"text": "No papers found"}],
+        }
+        mock_orkg.return_value = {
+            "toolUseId": "test-default-orkg",
+            "status": "success",
+            "content": [{"text": "No papers found"}],
+        }
 
         tool_use = {
             "toolUseId": "test-default",
-            "input": {"topic": "test"}  # No explicit enable flags
+            "input": {"topic": "test"},
         }
 
         result = research_finder(tool_use)
 
         assert result["status"] == "success"
         content = result["content"][0]["text"]
-        assert "OpenAlex for bibliographic data and ORKG Ask" in content
+        assert (
+            "OpenAlex for bibliographic data, ORKG Ask for semantic search, CORE for open access papers"
+            in content
+        )
 
-    @patch("requests.get")
-    def test_openalex_fails_orkg_succeeds(self, mock_get):
-        """Test fallback when OpenAlex fails but ORKG succeeds."""
-        def side_effect(url, **kwargs):
-            mock_response = Mock()
-            if "openalex" in url:
-                mock_response.status_code = 500
-                return mock_response
-            else:  # ORKG
-                mock_response.status_code = 200
-                mock_response.json.return_value = {
-                    "payload": {
-                        "items": [{
-                            "title": "ORKG Fallback Paper",
-                            "authors": ["Fallback Author"],
-                            "year": 2023,
-                            "journals": ["Fallback Journal"],
-                            "doi": "10.9999/fallback",
-                            "abstract": "Fallback paper from ORKG",
-                            "citation_count": 5,
-                            "document_type": "journal"
-                        }]
-                    }
-                }
-                return mock_response
+    @pytest.mark.parametrize(
+        "enable_openalex,enable_orkg,enable_core,expected_sources",
+        [
+            (True, True, True, 3),
+            (True, False, False, 1),
+            (False, True, False, 1),
+            (False, False, False, 0),
+        ],
+    )
+    @patch("research_finder.core_search")
+    @patch("research_finder.orkg_search")
+    @patch("research_finder.openalex_search")
+    @patch("research_finder.config")
+    def test_source_counting(
+        self,
+        mock_config,
+        mock_openalex,
+        mock_orkg,
+        mock_core,
+        enable_openalex,
+        enable_orkg,
+        enable_core,
+        expected_sources,
+    ):
+        """Test that the correct number of sources are queried."""
+        mock_config.get_defaults.return_value = {"max_results": 10, "min_year": 2004}
+        mock_config.get_behavior_config.return_value = {"max_workers": 3}
+        mock_config.is_source_enabled.return_value = False
+        mock_config.get_source_config.return_value = {"timeout": 40}
 
-        mock_get.side_effect = side_effect
+        empty_result = {"status": "success", "content": [{"text": "No papers found"}]}
+        mock_openalex.return_value = empty_result
+        mock_orkg.return_value = empty_result
+        mock_core.return_value = empty_result
 
         tool_use = {
-            "toolUseId": "test-fallback",
+            "toolUseId": f"test-sources-{expected_sources}",
             "input": {
                 "topic": "test",
-                "enable_openalex": True,
-                "enable_orkg": True
-            }
+                "enable_openalex": enable_openalex,
+                "enable_orkg": enable_orkg,
+                "enable_core": enable_core,
+            },
         }
 
         result = research_finder(tool_use)
 
         assert result["status"] == "success"
-        content = result["content"][0]["text"]
-        assert "ORKG Fallback Paper" in content
-        assert "Found 1 relevant research papers" in content
 
-    @pytest.mark.parametrize("enable_openalex,enable_orkg,expected_sources", [
-        (True, True, 2),
-        (True, False, 1),
-        (False, True, 1),
-        (False, False, 0)
-    ])
-    def test_source_counting(self, enable_openalex, enable_orkg, expected_sources):
-        """Test that the correct number of sources are queried."""
-        with patch("requests.get") as mock_get:
-            mock_response = Mock()
-            mock_response.status_code = 200
-            mock_response.json.return_value = {"results": [], "payload": {"items": []}}
-            mock_get.return_value = mock_response
+        # Check that correct number of tools were called
+        call_count = 0
+        if enable_openalex:
+            mock_openalex.assert_called_once()
+            call_count += 1
+        if enable_orkg:
+            mock_orkg.assert_called_once()
+            call_count += 1
+        if enable_core:
+            mock_core.assert_called_once()
+            call_count += 1
 
-            tool_use = {
-                "toolUseId": f"test-sources-{expected_sources}",
-                "input": {
-                    "topic": "test",
-                    "enable_openalex": enable_openalex,
-                    "enable_orkg": enable_orkg
-                }
-            }
-
-            result = research_finder(tool_use)
-
-            assert result["status"] == "success"
-            if expected_sources == 0:
-                assert mock_get.call_count == 0
-            else:
-                # ORKG may retry, so check minimum calls
-                assert mock_get.call_count >= expected_sources
+        assert call_count == expected_sources

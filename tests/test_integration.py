@@ -1,4 +1,5 @@
 """Integration tests for the research workflow."""
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -18,9 +19,11 @@ class TestWorkflowIntegration:
                 mock_research_finder.return_value = {
                     "toolUseId": "test-123",
                     "status": "success",
-                    "content": [{
-                        "text": "Found 2 papers: 'AI in Medicine' (Citations: 150) and 'ML for Diagnosis' (Citations: 89)"
-                    }]
+                    "content": [
+                        {
+                            "text": "Found 2 papers: 'AI in Medicine' (Citations: 150) and 'ML for Diagnosis' (Citations: 89)"
+                        }
+                    ],
                 }
 
                 # Mock agents
@@ -31,31 +34,40 @@ class TestWorkflowIntegration:
                 web_agent.return_value = "Web research findings"
 
                 analyst_agent = Mock()
-                analyst_agent.return_value = "Analysis: High quality papers with good citations"
+                analyst_agent.return_value = (
+                    "Analysis: High quality papers with good citations"
+                )
 
                 writer_agent = Mock()
                 writer_agent.return_value = "Final comprehensive report"
 
                 mock_agent_class.side_effect = [
-                    research_agent, web_agent, analyst_agent, writer_agent
+                    research_agent,
+                    web_agent,
+                    analyst_agent,
+                    writer_agent,
                 ]
 
                 # Mock ThreadPoolExecutor
-                with patch("research_agents_workflow.ThreadPoolExecutor") as mock_executor:
+                with patch(
+                    "research_agents_workflow.ThreadPoolExecutor"
+                ) as mock_executor:
                     mock_executor_instance = Mock()
                     mock_future = Mock()
                     mock_future.result.return_value = "Mock result"
                     mock_executor_instance.submit.return_value = mock_future
-                    mock_executor.return_value.__enter__.return_value = mock_executor_instance
+                    mock_executor.return_value.__enter__.return_value = (
+                        mock_executor_instance
+                    )
 
                     result = await run_research_workflow("AI in healthcare")
 
                     assert result == "Final comprehensive report"
                     assert mock_agent_class.call_count == 4
 
-                    # Verify research agent was called with research_finder tool
+                    # Verify research agent was called with query_router tool
                     research_agent_call = mock_agent_class.call_args_list[0]
-                    assert "research_finder" in str(research_agent_call)
+                    assert "query_router" in str(research_agent_call)
 
     @pytest.mark.asyncio
     async def test_workflow_error_handling(self):
@@ -69,13 +81,20 @@ class TestWorkflowIntegration:
             web_agent.return_value = "Limited web information available"
 
             analyst_agent = Mock()
-            analyst_agent.return_value = "Analysis: Limited data available, low confidence"
+            analyst_agent.return_value = (
+                "Analysis: Limited data available, low confidence"
+            )
 
             writer_agent = Mock()
-            writer_agent.return_value = "Report: Insufficient data for comprehensive analysis"
+            writer_agent.return_value = (
+                "Report: Insufficient data for comprehensive analysis"
+            )
 
             mock_agent_class.side_effect = [
-                research_agent, web_agent, analyst_agent, writer_agent
+                research_agent,
+                web_agent,
+                analyst_agent,
+                writer_agent,
             ]
 
             with patch("research_agents_workflow.ThreadPoolExecutor") as mock_executor:
@@ -83,7 +102,9 @@ class TestWorkflowIntegration:
                 mock_future = Mock()
                 mock_future.result.return_value = "Error result"
                 mock_executor_instance.submit.return_value = mock_future
-                mock_executor.return_value.__enter__.return_value = mock_executor_instance
+                mock_executor.return_value.__enter__.return_value = (
+                    mock_executor_instance
+                )
 
                 result = await run_research_workflow("nonexistent topic")
 
@@ -108,7 +129,10 @@ class TestWorkflowIntegration:
             writer_agent.return_value = "Final filtered report"
 
             mock_agent_class.side_effect = [
-                research_agent, web_agent, analyst_agent, writer_agent
+                research_agent,
+                web_agent,
+                analyst_agent,
+                writer_agent,
             ]
 
             with patch("research_agents_workflow.ThreadPoolExecutor") as mock_executor:
@@ -116,7 +140,9 @@ class TestWorkflowIntegration:
                 mock_future = Mock()
                 mock_future.result.return_value = "Mock result"
                 mock_executor_instance.submit.return_value = mock_future
-                mock_executor.return_value.__enter__.return_value = mock_executor_instance
+                mock_executor.return_value.__enter__.return_value = (
+                    mock_executor_instance
+                )
 
                 result = await run_research_workflow("AI research filtering")
 

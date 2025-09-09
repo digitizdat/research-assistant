@@ -1,0 +1,121 @@
+{
+  "openalex": {
+    "machine learning": {
+      "toolUseId": "test-openalex-machine-learning",
+      "status": "success",
+      "content": [
+        {
+          "text": "\ud83d\udd2c **OpenAlex Results for: 'machine learning'**\n\n\ud83d\udcca Found 3 papers from 2020 onwards\n\n**1. Physics-informed machine learning**\n   \ud83d\udc65 Authors: George Em Karniadakis, Ioannis G. Kevrekidis, Lu Lu, Paris Perdikaris, Sifan Wang, Liu Yang\n   \ud83d\udcc5 Year: 2021\n   \ud83d\udcd6 Journal: N/A\n   \ud83d\udcc8 Citations: 4017\n   \ud83d\udcdd Abstract: N/A\n   \ud83d\udd17 DOI: https://doi.org/10.1038/s42254-021-00314-5\n\n**2. A Survey on Bias and Fairness in Machine Learning**\n   \ud83d\udc65 Authors: Ninareh Mehrabi, Fred Morstatter, Nripsuta Ani Saxena, Kristina Lerman, Aram Galstyan\n   \ud83d\udcc5 Year: 2021\n   \ud83d\udcd6 Journal: N/A\n   \ud83d\udcc8 Citations: 3303\n   \ud83d\udcdd Abstract: With the widespread use of artificial intelligence (AI) systems and applications in our everyday lives, accounting for fairness has gained significant importance in designing and engineering of such s...\n   \ud83d\udd17 DOI: https://doi.org/10.1145/3457607\n\n**3. Machine learning and deep learning**\n   \ud83d\udc65 Authors: Christian Janiesch, Patrick Zschech, Kai Heinrich\n   \ud83d\udcc5 Year: 2021\n   \ud83d\udcd6 Journal: N/A\n   \ud83d\udcc8 Citations: 2015\n   \ud83d\udcdd Abstract: Abstract Today, intelligent systems that offer artificial intelligence capabilities often rely on machine learning. Machine learning describes the capacity of systems to learn from problem-specific tr...\n   \ud83d\udd17 DOI: https://doi.org/10.1007/s12525-021-00475-2\n\n"
+        }
+      ]
+    },
+    "artificial intelligence": {
+      "toolUseId": "test-openalex-artificial-intelligence",
+      "status": "success",
+      "content": [
+        {
+          "text": "\ud83d\udd2c **OpenAlex Results for: 'artificial intelligence'**\n\n\ud83d\udcca Found 3 papers from 2020 onwards\n\n**1. Artificial Intelligence in Education: A Review**\n   \ud83d\udc65 Authors: Lijia Chen, Pingping Chen, Zhijian Lin\n   \ud83d\udcc5 Year: 2020\n   \ud83d\udcd6 Journal: N/A\n   \ud83d\udcc8 Citations: 2219\n   \ud83d\udcdd Abstract: The purpose of this study was to assess the impact of Artificial Intelligence (AI) on education. Premised on a narrative and framework for assessing AI identified from a preliminary analysis, the scop...\n   \ud83d\udd17 DOI: https://doi.org/10.1109/access.2020.2988510\n\n**2. The role of artificial intelligence in achieving the Sustainable Development Goals**\n   \ud83d\udc65 Authors: Ricardo Vinuesa, Hossein Azizpour, Iolanda Leite, Madeline Balaam, Virginia Dignum, Sami Domisch, Anna Fell\u00e4nder, Simone D. Langhans, Max Tegmark, Francesco Fuso Nerini\n   \ud83d\udcc5 Year: 2020\n   \ud83d\udcd6 Journal: N/A\n   \ud83d\udcc8 Citations: 2157\n   \ud83d\udcdd Abstract: Abstract The emergence of artificial intelligence (AI) and its progressively wider impact on many sectors requires an assessment of its effect on the achievement of the Sustainable Development Goals. ...\n   \ud83d\udd17 DOI: https://doi.org/10.1038/s41467-019-14108-y\n\n**3. A Survey on Explainable Artificial Intelligence (XAI): Toward Medical XAI**\n   \ud83d\udc65 Authors: Erico Tjoa, Cuntai Guan\n   \ud83d\udcc5 Year: 2020\n   \ud83d\udcd6 Journal: N/A\n   \ud83d\udcc8 Citations: 1546\n   \ud83d\udcdd Abstract: Recently, artificial intelligence and machine learning in general have demonstrated remarkable performances in many tasks, from image processing to natural language processing, especially with the adv...\n   \ud83d\udd17 DOI: https://doi.org/10.1109/tnnls.2020.3027314\n\n"
+        }
+      ]
+    },
+    "deep learning computer vision": {
+      "toolUseId": "test-openalex-deep-learning-computer-vision",
+      "status": "success",
+      "content": [
+        {
+          "text": "\ud83d\udd2c **OpenAlex Results for: 'deep learning computer vision'**\n\n\ud83d\udcca Found 3 papers from 2020 onwards\n\n**1. Deep learning-enabled medical computer vision**\n   \ud83d\udc65 Authors: Andre Esteva, Katherine Chou, Serena Yeung, Nikhil Naik, Ali Madani, Ali Mottaghi, Yun Liu, Eric J. Topol, Jeff Dean, Richard Socher\n   \ud83d\udcc5 Year: 2021\n   \ud83d\udcd6 Journal: N/A\n   \ud83d\udcc8 Citations: 942\n   \ud83d\udcdd Abstract: Abstract A decade of unprecedented progress in artificial intelligence (AI) has demonstrated the potential for many fields\u2014including medicine\u2014to benefit from the insights that AI techniques can extrac...\n   \ud83d\udd17 DOI: https://doi.org/10.1038/s41746-020-00376-2\n\n**2. Deep learning computer vision algorithm for detecting kidney stone composition**\n   \ud83d\udc65 Authors: Kristian M. Black, Hei Law, Ali H. Aldoukhi, Jia Deng, Khurshid R. Ghani\n   \ud83d\udcc5 Year: 2020\n   \ud83d\udcd6 Journal: N/A\n   \ud83d\udcc8 Citations: 132\n   \ud83d\udcdd Abstract: To assess the recall of a deep learning (DL) method to automatically detect kidney stones composition from digital photographs of stones.A total of 63 human kidney stones of varied compositions were o...\n   \ud83d\udd17 DOI: https://doi.org/10.1111/bju.15035\n\n**3. Real-Time Human Detection and Counting System Using Deep Learning Computer Vision Techniques**\n   \ud83d\udc65 Authors: Hamam Mokayed, Tee Zhen Quan, Lama Alkhaled, V. Sivakumar\n   \ud83d\udcc5 Year: 2022\n   \ud83d\udcd6 Journal: N/A\n   \ud83d\udcc8 Citations: 79\n   \ud83d\udcdd Abstract: Targeting the current Covid 19 pandemic situation, this paper identifies the need of crowd management. Thus, it proposes an effective and efficient real-time human detection and counting solution spec...\n   \ud83d\udd17 DOI: https://doi.org/10.47852/bonviewaia2202391\n\n"
+        }
+      ]
+    },
+    "natural language processing": {
+      "toolUseId": "test-openalex-natural-language-processing",
+      "status": "success",
+      "content": [
+        {
+          "text": "\ud83d\udd2c **OpenAlex Results for: 'natural language processing'**\n\n\ud83d\udcca Found 3 papers from 2020 onwards\n\n**1. Transformers: State-of-the-Art Natural Language Processing**\n   \ud83d\udc65 Authors: Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, Cl\u00e9ment Delangue, Anthony Moi, Pierric Cistac, Tim Rault, R\u00e9mi Louf, Morgan Funtowicz, Joe Davison, Sam Shleifer, Patrick von Platen, Clara Ma, Yacine Jernite, Julien Plu, Canwen Xu, Teven Le Scao, Sylvain Gugger, Mariama Drame, Quentin Lhoest, Alexander M. Rush\n   \ud83d\udcc5 Year: 2020\n   \ud83d\udcd6 Journal: N/A\n   \ud83d\udcc8 Citations: 6445\n   \ud83d\udcdd Abstract: Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, Clement Delangue, Anthony Moi, Pierric Cistac, Tim Rault, Remi Louf, Morgan Funtowicz, Joe Davison, Sam Shleifer, Patrick von Platen, Clara M...\n   \ud83d\udd17 DOI: https://doi.org/10.18653/v1/2020.emnlp-demos.6\n\n**2. Pre-train, Prompt, and Predict: A Systematic Survey of Prompting Methods in Natural Language Processing**\n   \ud83d\udc65 Authors: Pengfei Liu, Weizhe Yuan, Jinlan Fu, Zhengbao Jiang, Hiroaki Hayashi, Graham Neubig\n   \ud83d\udcc5 Year: 2022\n   \ud83d\udcd6 Journal: N/A\n   \ud83d\udcc8 Citations: 2365\n   \ud83d\udcdd Abstract: This article surveys and organizes research works in a new paradigm in natural language processing, which we dub \u201cprompt-based learning.\u201d Unlike traditional supervised learning, which trains a model t...\n   \ud83d\udd17 DOI: https://doi.org/10.1145/3560815\n\n**3. A Survey of the Usages of Deep Learning for Natural Language Processing**\n   \ud83d\udc65 Authors: Daniel W. Otter, Julian Richard Medina, Jugal Kalita\n   \ud83d\udcc5 Year: 2020\n   \ud83d\udcd6 Journal: N/A\n   \ud83d\udcc8 Citations: 1528\n   \ud83d\udcdd Abstract: Over the last several years, the field of natural language processing has been propelled forward by an explosion in the use of deep learning models. This article provides a brief introduction to the f...\n   \ud83d\udd17 DOI: https://doi.org/10.1109/tnnls.2020.2979670\n\n"
+        }
+      ]
+    }
+  },
+  "orkg": {
+    "machine learning": {
+      "toolUseId": "test-orkg-machine-learning",
+      "status": "success",
+      "content": [
+        {
+          "text": "\u274c ORKG search failed for 'machine learning' after all attempts"
+        }
+      ]
+    },
+    "artificial intelligence ethics": {
+      "toolUseId": "test-orkg-artificial-intelligence-ethics",
+      "status": "success",
+      "content": [
+        {
+          "text": "\u274c ORKG search failed for 'artificial intelligence ethics' after all attempts"
+        }
+      ]
+    },
+    "neural networks": {
+      "toolUseId": "test-orkg-neural-networks",
+      "status": "success",
+      "content": [
+        {
+          "text": "\u274c ORKG search failed for 'neural networks' after all attempts"
+        }
+      ]
+    },
+    "computer vision": {
+      "toolUseId": "test-orkg-computer-vision",
+      "status": "success",
+      "content": [
+        {
+          "text": "\u274c ORKG search failed for 'computer vision' after all attempts"
+        }
+      ]
+    }
+  },
+  "core": {
+    "machine learning": {
+      "toolUseId": "test-core-machine-learning",
+      "status": "success",
+      "content": [
+        {
+          "text": "\u274c CORE search failed for 'machine learning' after all attempts"
+        }
+      ]
+    },
+    "artificial intelligence": {
+      "toolUseId": "test-core-artificial-intelligence",
+      "status": "success",
+      "content": [
+        {
+          "text": "\u274c CORE search failed for 'artificial intelligence' after all attempts"
+        }
+      ]
+    },
+    "data science": {
+      "toolUseId": "test-core-data-science",
+      "status": "success",
+      "content": [
+        {
+          "text": "\u274c CORE search failed for 'data science' after all attempts"
+        }
+      ]
+    },
+    "computer science": {
+      "toolUseId": "test-core-computer-science",
+      "status": "success",
+      "content": [
+        {
+          "text": "\ud83c\udf10 **CORE Results for: 'computer science'**\n\n\ud83d\udcca Found 0 papers from 2020 onwards\n\n\u274c No papers found matching your criteria.\n"
+        }
+      ]
+    }
+  },
+  "metadata": {
+    "generated_at": "2025-01-01T00:00:00Z",
+    "description": "Synthetic test data generated from actual API calls",
+    "usage": "Use this data for mocking in tests to avoid API calls"
+  }
+}

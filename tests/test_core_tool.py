@@ -1,7 +1,8 @@
 """Tests for CORE tool."""
-import pytest
+
 from unittest.mock import Mock, patch
-from core_tool import core_search, TOOL_SPEC
+
+from core_tool import TOOL_SPEC, core_search
 
 
 class TestCORETool:
@@ -19,21 +20,23 @@ class TestCORETool:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "results": [{
-                "title": "Test CORE Paper",
-                "authors": [{"name": "CORE Author"}],
-                "publishedDate": "2023-01-01",
-                "publisher": "CORE Publisher",
-                "doi": "10.1234/core",
-                "abstract": "Test CORE abstract",
-                "citationCount": 20
-            }]
+            "results": [
+                {
+                    "title": "Test CORE Paper",
+                    "authors": [{"name": "CORE Author"}],
+                    "publishedDate": "2023-01-01",
+                    "publisher": "CORE Publisher",
+                    "doi": "10.1234/core",
+                    "abstract": "Test CORE abstract",
+                    "citationCount": 20,
+                }
+            ]
         }
         mock_get.return_value = mock_response
 
         tool_use = {
             "toolUseId": "test-core",
-            "input": {"topic": "test", "max_results": 5}
+            "input": {"topic": "test", "max_results": 5},
         }
 
         result = core_search(tool_use)
@@ -49,10 +52,7 @@ class TestCORETool:
         """Test CORE search failure handling."""
         mock_get.side_effect = Exception("Connection failed")
 
-        tool_use = {
-            "toolUseId": "test-core-fail",
-            "input": {"topic": "test"}
-        }
+        tool_use = {"toolUseId": "test-core-fail", "input": {"topic": "test"}}
 
         result = core_search(tool_use)
 
@@ -66,15 +66,12 @@ class TestCORETool:
         responses = [
             Mock(status_code=429),
             Mock(status_code=429),
-            Mock(status_code=200)
+            Mock(status_code=200),
         ]
         responses[2].json.return_value = {"results": []}
         mock_get.side_effect = responses
 
-        tool_use = {
-            "toolUseId": "test-core-retry",
-            "input": {"topic": "test"}
-        }
+        tool_use = {"toolUseId": "test-core-retry", "input": {"topic": "test"}}
 
         result = core_search(tool_use)
 
@@ -92,21 +89,21 @@ class TestCORETool:
                     "title": "Old Paper",
                     "publishedDate": "2010-01-01",
                     "authors": [{"name": "Old Author"}],
-                    "publisher": "Old Publisher"
+                    "publisher": "Old Publisher",
                 },
                 {
-                    "title": "Recent Paper", 
+                    "title": "Recent Paper",
                     "publishedDate": "2023-01-01",
                     "authors": [{"name": "New Author"}],
-                    "publisher": "New Publisher"
-                }
+                    "publisher": "New Publisher",
+                },
             ]
         }
         mock_get.return_value = mock_response
 
         tool_use = {
             "toolUseId": "test-core-filter",
-            "input": {"topic": "test", "min_year": 2020}
+            "input": {"topic": "test", "min_year": 2020},
         }
 
         result = core_search(tool_use)

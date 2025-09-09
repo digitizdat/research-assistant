@@ -68,23 +68,27 @@ def openalex_search(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
                             words[pos] = word
                     abstract = " ".join([w for w in words if w])
 
-                papers.append({
-                    "title": item.get("title", ""),
-                    "authors": [
-                        a.get("author", {}).get("display_name", "")
-                        for a in item.get("authorships", [])
-                    ],
-                    "year": item.get("publication_year"),
-                    "journal": item.get("host_venue", {}).get("display_name", ""),
-                    "doi": item.get("doi", ""),
-                    "abstract": abstract,
-                    "citation_count": item.get("cited_by_count", 0),
-                    "relevance_score": item.get("relevance_score", 0.0),
-                })
+                papers.append(
+                    {
+                        "title": item.get("title", ""),
+                        "authors": [
+                            a.get("author", {}).get("display_name", "")
+                            for a in item.get("authorships", [])
+                        ],
+                        "year": item.get("publication_year"),
+                        "journal": item.get("host_venue", {}).get("display_name", ""),
+                        "doi": item.get("doi", ""),
+                        "abstract": abstract,
+                        "citation_count": item.get("cited_by_count", 0),
+                        "relevance_score": item.get("relevance_score", 0.0),
+                    }
+                )
 
             # Format response
             response_text = f"🔬 **OpenAlex Results for: '{topic}'**\n\n"
-            response_text += f"📊 Found {len(papers)} papers from {min_year} onwards\n\n"
+            response_text += (
+                f"📊 Found {len(papers)} papers from {min_year} onwards\n\n"
+            )
 
             if papers:
                 for i, paper in enumerate(papers, 1):
@@ -94,7 +98,11 @@ def openalex_search(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
                     response_text += f"   📅 Year: {paper['year'] or 'N/A'}\n"
                     response_text += f"   📖 Journal: {paper['journal'] or 'N/A'}\n"
                     response_text += f"   📈 Citations: {paper['citation_count']}\n"
-                    abstract = paper["abstract"][:200] + "..." if len(paper["abstract"]) > 200 else paper["abstract"]
+                    abstract = (
+                        paper["abstract"][:200] + "..."
+                        if len(paper["abstract"]) > 200
+                        else paper["abstract"]
+                    )
                     response_text += f"   📝 Abstract: {abstract or 'N/A'}\n"
                     response_text += f"   🔗 DOI: {paper['doi'] or 'N/A'}\n\n"
             else:

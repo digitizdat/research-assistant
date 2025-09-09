@@ -42,7 +42,7 @@ from prompt_toolkit.history import FileHistory
 from strands import Agent
 from strands_tools import http_request
 
-import research_finder
+import query_router
 
 
 async def run_research_workflow(user_input):
@@ -62,19 +62,48 @@ async def run_research_workflow(user_input):
 
     print(f"\nProcessing: '{user_input}'")
 
+    # Check if this is a configuration command
+    import re
+
+    config_patterns = [
+        r"(enable|disable)\s+(?:the\s+)?(\w+)(?:\s+tool)?",
+        r"set\s+(?:the\s+)?(\w+)?\s*timeout\s+to\s+(\d+)",
+        r"set\s+(?:the\s+)?(\w+)?\s*retries?\s+to\s+(\d+)",
+        r"show\s+config",
+        r"configure\s+",
+        r"config\s+",
+        r"settings\s+",
+    ]
+
+    user_input_lower = user_input.lower().strip()
+    is_config = any(re.search(pattern, user_input_lower) for pattern in config_patterns)
+
+    if is_config:
+        # Handle configuration command directly
+        print("\nDetected configuration command - executing directly...")
+        config_agent = Agent(
+            system_prompt=(
+                "You are a Configuration Agent that handles system settings. "
+                "Use query_router to execute configuration commands directly."
+            ),
+            callback_handler=None,
+            tools=[query_router],
+        )
+        return config_agent(user_input)
+
     # Phase 1: Parallel Data Gathering
     print("\nPhase 1: Gathering data from multiple sources in parallel...")
 
     # Create agents for parallel execution
     research_agent = Agent(
         system_prompt=(
-            "You are a Research Agent focused on scientific literature. "
-            "Use research_finder to find relevant scientific papers. "
-            "Include citation counts and paper summaries. "
-            "Keep findings under 400 words."
+            "You are a Research Agent that handles both research queries and configuration commands. "
+            "Use query_router to either find scientific papers or manage configuration settings. "
+            "For research: Include citation counts and paper summaries, keep under 400 words. "
+            "For config: Execute the configuration change as requested."
         ),
         callback_handler=None,
-        tools=[research_finder],
+        tools=[query_router],
     )
 
     web_research_agent = Agent(
@@ -92,7 +121,7 @@ async def run_research_workflow(user_input):
     with ThreadPoolExecutor(max_workers=2) as executor:
         research_future = executor.submit(
             research_agent,
-            f"Find scientific papers about: '{user_input}'. Limit to 3 papers max.",
+            user_input,
         )
         web_future = executor.submit(
             web_research_agent,

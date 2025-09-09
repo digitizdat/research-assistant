@@ -45,7 +45,7 @@ def orkg_search(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
     params = {
         "query": topic,
         "limit": max_results,
-        "filter": f"year >= {min_year}" if min_year else None
+        "filter": f"year >= {min_year}" if min_year else None,
     }
     params = {k: v for k, v in params.items() if v is not None}
 
@@ -56,7 +56,7 @@ def orkg_search(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
             headers = {
                 "User-Agent": "Research-Assistant/1.0",
                 "Accept": "application/json",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             }
 
             r = requests.get(url, params=params, headers=headers, timeout=15)
@@ -94,20 +94,24 @@ def orkg_search(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
                         journal_name = journals
 
                     if item.get("title"):
-                        papers.append({
-                            "title": item.get("title", ""),
-                            "authors": authors,
-                            "year": str(year_val) if year_val else "",
-                            "journal": journal_name,
-                            "doi": item.get("doi", ""),
-                            "abstract": item.get("abstract", ""),
-                            "citation_count": int(item.get("citation_count", 0)),
-                            "relevance_score": 0.8,
-                        })
+                        papers.append(
+                            {
+                                "title": item.get("title", ""),
+                                "authors": authors,
+                                "year": str(year_val) if year_val else "",
+                                "journal": journal_name,
+                                "doi": item.get("doi", ""),
+                                "abstract": item.get("abstract", ""),
+                                "citation_count": int(item.get("citation_count", 0)),
+                                "relevance_score": 0.8,
+                            }
+                        )
 
                 # Format response
                 response_text = f"🧠 **ORKG Ask Results for: '{topic}'**\n\n"
-                response_text += f"📊 Found {len(papers)} papers from {min_year} onwards\n\n"
+                response_text += (
+                    f"📊 Found {len(papers)} papers from {min_year} onwards\n\n"
+                )
 
                 if papers:
                     for i, paper in enumerate(papers, 1):
@@ -117,7 +121,11 @@ def orkg_search(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
                         response_text += f"   📅 Year: {paper['year'] or 'N/A'}\n"
                         response_text += f"   📖 Journal: {paper['journal'] or 'N/A'}\n"
                         response_text += f"   📈 Citations: {paper['citation_count']}\n"
-                        abstract = paper["abstract"][:200] + "..." if len(paper["abstract"]) > 200 else paper["abstract"]
+                        abstract = (
+                            paper["abstract"][:200] + "..."
+                            if len(paper["abstract"]) > 200
+                            else paper["abstract"]
+                        )
                         response_text += f"   📝 Abstract: {abstract or 'N/A'}\n"
                         response_text += f"   🔗 DOI: {paper['doi'] or 'N/A'}\n\n"
                 else:
@@ -134,7 +142,7 @@ def orkg_search(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
                 break
             elif r.status_code == 429:
                 print("⏳ ORKG rate limited, waiting...")
-                time.sleep(2 ** attempt)
+                time.sleep(2**attempt)
                 continue
             else:
                 print(f"❌ ORKG error {r.status_code}: {r.text[:200]}")
@@ -152,5 +160,7 @@ def orkg_search(tool_use: ToolUse, **kwargs: Any) -> ToolResult:
     return {
         "toolUseId": tool_use_id,
         "status": "success",
-        "content": [{"text": f"❌ ORKG search failed for '{topic}' after all attempts"}],
+        "content": [
+            {"text": f"❌ ORKG search failed for '{topic}' after all attempts"}
+        ],
     }

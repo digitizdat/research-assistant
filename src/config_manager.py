@@ -1,4 +1,5 @@
 """Configuration management for research tools."""
+
 from pathlib import Path
 from typing import Any, Dict
 
@@ -18,7 +19,7 @@ class ConfigManager:
         """Load configuration from YAML file."""
         if self._config is None:
             try:
-                with open(self.config_path, 'r') as f:
+                with open(self.config_path, "r") as f:
                     self._config = yaml.safe_load(f)
             except FileNotFoundError:
                 # Fallback to default config
@@ -45,22 +46,25 @@ class ConfigManager:
         config = self.load_config()
         return config.get("behavior", {})
 
+    def save_config(self, config: Dict[str, Any]):
+        """Save configuration to file and update cache."""
+        with open(self.config_path, "w") as f:
+            yaml.dump(config, f, default_flow_style=False)
+        self._config = config
+
     def _get_default_config(self) -> Dict[str, Any]:
         """Fallback default configuration."""
         return {
             "sources": {
                 "openalex": {"enabled": True, "timeout": 40},
-                "orkg": {"enabled": True, "timeout": 60, "retry_attempts": 3}
+                "orkg": {"enabled": True, "timeout": 60, "retry_attempts": 3},
             },
             "defaults": {
                 "max_results": 10,
                 "min_year": 2004,
-                "publication_types": ["journal", "conference"]
+                "publication_types": ["journal", "conference"],
             },
-            "behavior": {
-                "parallel_execution": True,
-                "max_workers": 2
-            }
+            "behavior": {"parallel_execution": True, "max_workers": 2},
         }
 
 

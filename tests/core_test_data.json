@@ -1,0 +1,38 @@
+{
+  "open access": {
+    "toolUseId": "test-core-open-access",
+    "status": "success",
+    "content": [
+      {
+        "text": "\u274c CORE search failed for 'open access' after all attempts"
+      }
+    ]
+  },
+  "computer science education": {
+    "toolUseId": "test-core-computer-science-education",
+    "status": "success",
+    "content": [
+      {
+        "text": "\ud83c\udf10 **CORE Results for: 'computer science education'**\n\n\ud83d\udcca Found 0 papers from 2020 onwards\n\n\u274c No papers found matching your criteria.\n"
+      }
+    ]
+  },
+  "software engineering": {
+    "toolUseId": "test-core-software-engineering",
+    "status": "success",
+    "content": [
+      {
+        "text": "\ud83c\udf10 **CORE Results for: 'software engineering'**\n\n\ud83d\udcca Found 1 papers from 2020 onwards\n\n**1. Software engineering**\n   \ud83d\udc65 Authors: Fridge, Ernest M., III, Golej, Jim, Hiott, Jim, Plumb, Allan\n   \ud83d\udcc5 Year: N/A\n   \ud83d\udcd6 Journal: N/A\n   \ud83d\udcc8 Citations: 0\n   \ud83d\udcdd Abstract: Today's software systems generally use obsolete technology, are not integrated properly with other software systems, and are difficult and costly to maintain. The discipline of reverse engineering is ...\n   \ud83d\udd17 DOI: N/A\n\n"
+      }
+    ]
+  },
+  "information systems": {
+    "toolUseId": "test-core-information-systems",
+    "status": "success",
+    "content": [
+      {
+        "text": "\ud83c\udf10 **CORE Results for: 'information systems'**\n\n\ud83d\udcca Found 0 papers from 2020 onwards\n\n\u274c No papers found matching your criteria.\n"
+      }
+    ]
+  }
+}

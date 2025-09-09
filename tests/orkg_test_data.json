@@ -1,0 +1,38 @@
+{
+  "machine learning": {
+    "toolUseId": "test-orkg-machine-learning",
+    "status": "success",
+    "content": [
+      {
+        "text": "❌ ORKG search failed for 'machine learning' after all attempts"
+      }
+    ]
+  },
+  "artificial intelligence ethics": {
+    "toolUseId": "test-orkg-artificial-intelligence-ethics",
+    "status": "success",
+    "content": [
+      {
+        "text": "❌ ORKG search failed for 'artificial intelligence ethics' after all attempts"
+      }
+    ]
+  },
+  "neural networks": {
+    "toolUseId": "test-orkg-neural-networks",
+    "status": "success",
+    "content": [
+      {
+        "text": "❌ ORKG search failed for 'neural networks' after all attempts"
+      }
+    ]
+  },
+  "computer vision": {
+    "toolUseId": "test-orkg-computer-vision",
+    "status": "success",
+    "content": [
+      {
+        "text": "❌ ORKG search failed for 'computer vision' after all attempts"
+      }
+    ]
+  }
+}

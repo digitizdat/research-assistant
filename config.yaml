@@ -1,40 +1,31 @@
-# Research Assistant Configuration
-
-# Data Sources Configuration
-sources:
-  openalex:
-    enabled: true
-    timeout: 40
-    max_results_per_source: 10
-    base_url: "https://api.openalex.org/works"
-    
-  orkg:
-    enabled: true
-    timeout: 60
-    max_results_per_source: 10
-    base_url: "https://api.ask.orkg.org/index/search"
-    retry_attempts: 3
-    retry_delay: 1
-    
-  core:
-    enabled: true
-    timeout: 15
-    max_results_per_source: 10
-    base_url: "https://api.core.ac.uk/v3/search/works"
-    retry_attempts: 3
-    retry_delay: 1
-
-# Default Search Parameters
+behavior:
+  filter_duplicates: true
+  max_workers: 3
+  parallel_execution: true
+  sort_by_citations: false
 defaults:
   max_results: 10
   min_year: 2004
   publication_types:
-    - "journal"
-    - "conference"
-
-# Tool Behavior
-behavior:
-  parallel_execution: true
-  max_workers: 3
-  filter_duplicates: true
-  sort_by_citations: false
+  - journal
+  - conference
+sources:
+  core:
+    base_url: https://api.core.ac.uk/v3/search/works
+    enabled: true
+    max_results_per_source: 10
+    retry_attempts: 3
+    retry_delay: 1
+    timeout: 15
+  openalex:
+    base_url: https://api.openalex.org/works
+    enabled: true
+    max_results_per_source: 10
+    timeout: 40
+  orkg:
+    base_url: https://api.ask.orkg.org/index/search
+    enabled: false
+    max_results_per_source: 10
+    retry_attempts: 3
+    retry_delay: 1
+    timeout: 60

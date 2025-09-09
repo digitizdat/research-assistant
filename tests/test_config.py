@@ -1,4 +1,5 @@
 """Tests for configuration management."""
+
 import tempfile
 from pathlib import Path
 
@@ -27,15 +28,12 @@ class TestConfigManager:
         test_config = {
             "sources": {
                 "openalex": {"enabled": False, "timeout": 30},
-                "orkg": {"enabled": True, "timeout": 45}
+                "orkg": {"enabled": True, "timeout": 45},
             },
-            "defaults": {
-                "max_results": 5,
-                "min_year": 2020
-            }
+            "defaults": {"max_results": 5, "min_year": 2020},
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             yaml.dump(test_config, f)
             config_path = f.name
 
