@@ -33,8 +33,8 @@ jobs:
     - name: Lint and format with Ruff
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        ruff check --select E,F,B,I --ignore E501,E722 --fix research_*.py --statistics
-        ruff format $1
+        ruff check --select E,F,B,I --ignore E501,E722 --fix src/ --statistics
+        ruff format --respect-gitignore src/
     - name: Test with pytest
       run: |
         pytest
